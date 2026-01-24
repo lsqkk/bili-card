@@ -1,235 +1,257 @@
-<<<<<<< HEAD
-const { fetchBilibiliData } = require('../lib/bilibili');
-const { renderSVG } = require('../lib/renderer');
-const { getCached, setCached } = require('../utils/cache');
+// api/card.js - 最终完美版
+const axios = require('axios');
+
+// 配置
+const CONFIG = {
+  CACHE_TTL: 3600, // 缓存时间（秒）
+  TIMEOUT: 8000,   // API超时时间（毫秒）
+  RETRY_ATTEMPTS: 2, // 重试次数
+  USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+};
+
+// 内存缓存（生产环境建议使用Redis）
+const cache = new Map();
 
 module.exports = async (req, res) => {
-    const { uid, theme = 'default', hide = '', debug } = req.query;
+  const startTime = Date.now();
 
-    // 验证参数
-    if (!uid || !/^\d{3,10}$/.test(uid)) {
-        return sendErrorSVG(res, 'Invalid UID', 'UID应为3到10位数字');
+  try {
+    // 解析参数
+    const {
+      uid,
+      theme = 'default',
+      hide = '',
+      cache: cacheParam = 'true',
+      debug = 'false'
+    } = req.query;
+
+    const showDebug = debug === 'true';
+    const useCache = cacheParam !== 'false';
+
+    // 验证UID
+    if (!uid || !/^\d{2,10}$/.test(uid)) {
+      return sendErrorSVG(res, 'UID格式错误', '请提供有效的B站UID（2-10位数字）');
     }
 
     // 缓存键
-    const cacheKey = `card:${uid}:${theme}:${hide}`;
+    const cacheKey = `bili_${uid}_${theme}_${hide}`;
 
-    try {
-        // 检查缓存
-        const cached = await getCached(cacheKey);
-        if (cached) {
-            res.setHeader('Content-Type', 'image/svg+xml');
-            res.setHeader('Cache-Control', 'public, max-age=3600');
-            return res.send(cached);
-        }
-
-        // 获取数据
-        const data = await fetchBilibiliData(uid);
-
-        // 解析显示选项
-        const hidden = new Set(hide.split(',').map(h => h.trim()));
-        const options = {
-            showSignature: !hidden.has('signature'),
-            showVideos: !hidden.has('videos'),
-            showStats: !hidden.has('stats'),
-            showFollowers: !hidden.has('followers')
-        };
-
-        // 渲染SVG
-        const svg = await renderSVG(data, { theme, options });
-
-        // 设置缓存
-        await setCached(cacheKey, svg, 3600);
-
-        // 返回响应
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        res.send(svg);
-
-    } catch (error) {
-        console.error('Error:', error);
-        // 返回错误信息的SVG，以便调试
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.status(500).send(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
-        <rect width="400" height="200" fill="#f8f9fa"/>
-        <text x="200" y="100" text-anchor="middle" font-family="Arial" fill="#dc3545">
-          Error: ${error.message}
-        </text>
-      </svg>
-    `);
+    // 检查缓存
+    if (useCache) {
+      const cached = getCachedSVG(cacheKey);
+      if (cached) {
+        console.log(`[缓存命中] UID: ${uid}`);
+        return sendSVGResponse(res, cached, true);
+      }
     }
-};
 
-function sendErrorSVG(res, title, message) {
-    const errorSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
-      <rect width="400" height="200" fill="#f8f9fa"/>
-      <text x="200" y="90" text-anchor="middle" font-family="Arial" font-size="16" fill="#dc3545">
-        ${title}
-      </text>
-      <text x="200" y="120" text-anchor="middle" font-family="Arial" font-size="12" fill="#6c757d">
-        ${message}
-=======
-// api/card.js - API诊断测试版
-const axios = require('axios');
+    console.log(`[开始处理] UID: ${uid}, 主题: ${theme}`);
 
-module.exports = async (req, res) => {
-    console.log('=== API诊断测试开始 ===');
+    // 并行获取所有数据
+    const [userData, relationData, videoData] = await Promise.allSettled([
+      fetchUserInfo(uid),
+      fetchRelationInfo(uid),
+      fetchVideoInfo(uid)
+    ]);
 
-    try {
-        const { uid, debug = 'false' } = req.query;
-        const showDebug = debug === 'true';
+    // 检查用户数据是否成功
+    if (userData.status === 'rejected' || !userData.value.success) {
+      const errorMsg = userData.status === 'rejected'
+        ? userData.reason?.message || '用户信息获取失败'
+        : userData.value.error || '用户信息获取失败';
 
-        if (!uid || !/^\d+$/.test(uid)) {
-            return sendErrorSVG(res, 'UID格式不正确，应为纯数字');
-        }
-
-        console.log(`测试UID: ${uid}`);
-        console.log(`当前时间: ${new Date().toISOString()}`);
-
-        // 测试多个可能的API端点
-        const testResults = await testAllAPIs(uid);
-
-        // 生成诊断报告
-        const diagnosticSVG = generateDiagnosticSVG(uid, testResults, showDebug);
-
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-        res.send(diagnosticSVG);
-
-    } catch (error) {
-        console.error('诊断过程中出现异常:', error);
-        const errorSVG = generateErrorSVG(error);
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.status(500).send(errorSVG);
+      console.error(`用户数据获取失败: ${errorMsg}`);
+      return sendErrorSVG(res, '用户信息获取失败', '请确认UID正确且用户存在');
     }
+
+    const userInfo = userData.value.data;
+    console.log(`用户信息获取成功: ${userInfo.name} (Lv${userInfo.level})`);
+
+    // 构建数据对象
+    const cardData = {
+      user: userInfo,
+      stats: {
+        // 粉丝数和关注数从relationAPI获取，如果失败则显示为0
+        followers: relationData.status === 'fulfilled' && relationData.value.success
+          ? relationData.value.data.follower
+          : 0,
+        following: relationData.status === 'fulfilled' && relationData.value.success
+          ? relationData.value.data.following
+          : 0,
+        // 投稿总数从videoAPI获取
+        totalVideos: videoData.status === 'fulfilled' && videoData.value.success
+          ? videoData.value.total
+          : 0
+      },
+      videos: {
+        latest: videoData.status === 'fulfilled' && videoData.value.success
+          ? videoData.value.videos?.find(v => v.orderby === 'pubdate') || null
+          : null,
+        popular: videoData.status === 'fulfilled' && videoData.value.success
+          ? videoData.value.videos?.find(v => v.orderby === 'views') || null
+          : null
+      },
+      meta: {
+        uid,
+        generatedAt: new Date().toISOString(),
+        processingTime: Date.now() - startTime
+      }
+    };
+
+    // 解析隐藏选项
+    const hiddenItems = hide.split(',').map(item => item.trim().toLowerCase());
+    const displayOptions = {
+      showSignature: !hiddenItems.includes('signature'),
+      showLatestVideo: !hiddenItems.includes('latest'),
+      showPopularVideo: !hiddenItems.includes('popular'),
+      showStats: !hiddenItems.includes('stats'),
+      showFollowers: !hiddenItems.includes('followers')
+    };
+
+    // 生成SVG
+    const svg = generateSVGCard(cardData, { theme, ...displayOptions }, showDebug);
+
+    // 保存到缓存
+    if (useCache) {
+      setCachedSVG(cacheKey, svg, CONFIG.CACHE_TTL);
+    }
+
+    // 发送响应
+    console.log(`[处理完成] UID: ${uid}, 耗时: ${cardData.meta.processingTime}ms`);
+    return sendSVGResponse(res, svg, false);
+
+  } catch (error) {
+    console.error('诊断过程中出现异常:', error);
+    const errorSVG = generateErrorSVG(error);
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.status(500).send(errorSVG);
+  }
 };
 
 // 测试所有可能的API
 async function testAllAPIs(uid) {
-    const results = {};
+  const results = {};
 
-    // 测试1: 原始uapis.cn接口
-    console.log('\n--- 测试1: uapis.cn接口 ---');
-    try {
-        const response = await axios.get('https://uapis.cn/api/v1/social/bilibili/userinfo', {
-            params: { uid },
-            timeout: 10000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-        });
+  // 测试1: 原始uapis.cn接口
+  console.log('\n--- 测试1: uapis.cn接口 ---');
+  try {
+    const response = await axios.get('https://uapis.cn/api/v1/social/bilibili/userinfo', {
+      params: { uid },
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
 
-        results.uapis = {
-            success: true,
-            status: response.status,
-            data: response.data,
-            requestUrl: `https://uapis.cn/api/v1/social/bilibili/userinfo?uid=${uid}`,
-            details: `code: ${response.data.code}, message: ${response.data.message || '无'}`
-        };
+    results.uapis = {
+      success: true,
+      status: response.status,
+      data: response.data,
+      requestUrl: `https://uapis.cn/api/v1/social/bilibili/userinfo?uid=${uid}`,
+      details: `code: ${response.data.code}, message: ${response.data.message || '无'}`
+    };
 
-        console.log('uapis.cn响应:', {
-            status: response.status,
-            code: response.data.code,
-            message: response.data.message,
-            hasData: !!response.data.data
-        });
+    console.log('uapis.cn响应:', {
+      status: response.status,
+      code: response.data.code,
+      message: response.data.message,
+      hasData: !!response.data.data
+    });
 
-    } catch (error) {
-        results.uapis = {
-            success: false,
-            error: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            details: error.code || '未知错误'
-        };
-        console.log('uapis.cn失败:', error.message);
-    }
+  } catch (error) {
+    results.uapis = {
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      details: error.code || '未知错误'
+    };
+    console.log('uapis.cn失败:', error.message);
+  }
 
-    // 测试2: 备用API - B站官方风格
-    console.log('\n--- 测试2: 备用API（官方风格） ---');
-    try {
-        const response = await axios.get(`https://api.bilibili.com/x/space/acc/info`, {
-            params: { mid: uid },
-            timeout: 10000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': 'https://space.bilibili.com'
-            }
-        });
+  // 测试2: 备用API - B站官方风格
+  console.log('\n--- 测试2: 备用API（官方风格） ---');
+  try {
+    const response = await axios.get(`https://api.bilibili.com/x/space/acc/info`, {
+      params: { mid: uid },
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://space.bilibili.com'
+      }
+    });
 
-        results.official = {
-            success: true,
-            status: response.status,
-            data: response.data,
-            requestUrl: `https://api.bilibili.com/x/space/acc/info?mid=${uid}`,
-            details: `code: ${response.data.code}, message: ${response.data.message || '无'}`
-        };
+    results.official = {
+      success: true,
+      status: response.status,
+      data: response.data,
+      requestUrl: `https://api.bilibili.com/x/space/acc/info?mid=${uid}`,
+      details: `code: ${response.data.code}, message: ${response.data.message || '无'}`
+    };
 
-        console.log('官方API响应:', {
-            status: response.status,
-            code: response.data.code,
-            message: response.data.message,
-            hasData: !!response.data.data
-        });
+    console.log('官方API响应:', {
+      status: response.status,
+      code: response.data.code,
+      message: response.data.message,
+      hasData: !!response.data.data
+    });
 
-    } catch (error) {
-        results.official = {
-            success: false,
-            error: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            details: error.code || '未知错误'
-        };
-        console.log('官方API失败:', error.message);
-    }
+  } catch (error) {
+    results.official = {
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      details: error.code || '未知错误'
+    };
+    console.log('官方API失败:', error.message);
+  }
 
-    // 测试3: 社区维护的API
-    console.log('\n--- 测试3: 社区API ---');
-    try {
-        const response = await axios.get(`https://api.bilibili.com/x/relation/stat`, {
-            params: { vmid: uid },
-            timeout: 10000
-        });
+  // 测试3: 社区维护的API
+  console.log('\n--- 测试3: 社区API ---');
+  try {
+    const response = await axios.get(`https://api.bilibili.com/x/relation/stat`, {
+      params: { vmid: uid },
+      timeout: 10000
+    });
 
-        results.community = {
-            success: true,
-            status: response.status,
-            data: response.data,
-            requestUrl: `https://api.bilibili.com/x/relation/stat?vmid=${uid}`,
-            details: `code: ${response.data.code}`
-        };
+    results.community = {
+      success: true,
+      status: response.status,
+      data: response.data,
+      requestUrl: `https://api.bilibili.com/x/relation/stat?vmid=${uid}`,
+      details: `code: ${response.data.code}`
+    };
 
-        console.log('社区API响应:', {
-            status: response.status,
-            code: response.data.code
-        });
+    console.log('社区API响应:', {
+      status: response.status,
+      code: response.data.code
+    });
 
-    } catch (error) {
-        results.community = {
-            success: false,
-            error: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            details: error.code || '未知错误'
-        };
-        console.log('社区API失败:', error.message);
-    }
+  } catch (error) {
+    results.community = {
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      details: error.code || '未知错误'
+    };
+    console.log('社区API失败:', error.message);
+  }
 
-    return results;
+  return results;
 }
 
 // 生成诊断报告SVG
 function generateDiagnosticSVG(uid, results, showDebug = false) {
-    const now = new Date();
-    const timestamp = now.toLocaleString('zh-CN');
+  const now = new Date();
+  const timestamp = now.toLocaleString('zh-CN');
 
-    // 计算总体状态
-    const anySuccess = Object.values(results).some(r => r.success);
-    const overallStatus = anySuccess ? '✅ 部分API可用' : '❌ 所有API均失败';
+  // 计算总体状态
+  const anySuccess = Object.values(results).some(r => r.success);
+  const overallStatus = anySuccess ? '✅ 部分API可用' : '❌ 所有API均失败';
 
-    let svg = `
+  let svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
       <defs>
         <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -349,12 +371,12 @@ function generateDiagnosticSVG(uid, results, showDebug = false) {
     </svg>
   `;
 
-    return svg;
+  return svg;
 }
 
 // 生成错误SVG
 function generateErrorSVG(error) {
-    return `
+  return `
     <svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200">
       <rect width="100%" height="100%" fill="#f8d7da" rx="12" ry="12"/>
       <text x="300" y="80" text-anchor="middle" font-size="24" fill="#721c24" font-weight="bold">
@@ -371,22 +393,41 @@ function generateErrorSVG(error) {
 }
 
 function sendErrorSVG(res, message) {
-    const errorSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="150" viewBox="0 0 400 150">
-      <rect width="100%" height="100%" fill="#f8f9fa" rx="8" ry="8"/>
-      <text x="200" y="60" text-anchor="middle" font-size="18" fill="#dc3545">
-        ${message}
-      </text>
-      <text x="200" y="90" text-anchor="middle" font-size="12" fill="#6c757d">
-        请提供有效的B站UID（纯数字）
->>>>>>> parent of e58614c (Update card.js)
+  const errorSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="540" height="200" viewBox="0 0 540 200">
+      <defs>
+        <linearGradient id="errorBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF5F5"/>
+          <stop offset="100%" stop-color="#FEEBEB"/>
+        </linearGradient>
+      </defs>
+      
+      <rect width="540" height="200" fill="url(#errorBg)" rx="12" ry="12" stroke="#FECACA" stroke-width="1"/>
+      
+      <g transform="translate(270, 70)">
+        <!-- 错误图标 -->
+        <circle cx="0" cy="-10" r="25" fill="#FEE2E2"/>
+        <path d="M0,-25 L0,-5 M0,5 L0,10" stroke="#DC2626" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="0" cy="-10" r="23" stroke="#DC2626" stroke-width="2" fill="none"/>
+        
+        <!-- 错误标题 -->
+        <text y="40" text-anchor="middle" fill="#7F1D1D" font-size="20" font-weight="600">
+          ${title}
+        </text>
+        
+        <!-- 错误信息 -->
+        <text y="70" text-anchor="middle" fill="#991B1B" font-size="14" font-family="'Segoe UI', sans-serif">
+          ${message}
+        </text>
+      </g>
+      
+      <!-- 提示 -->
+      <text x="270" y="170" text-anchor="middle" fill="#92400E" font-size="11">
+        请检查UID是否正确或稍后重试 · bili-card.lsqkk.space
       </text>
     </svg>
   `;
-    res.setHeader('Content-Type', 'image/svg+xml');
-<<<<<<< HEAD
-    res.status(400).send(errorSVG);
-=======
-    res.send(errorSVG);
->>>>>>> parent of e58614c (Update card.js)
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.status(400).send(errorSVG);
 }
