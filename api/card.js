@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
 
     // 验证参数
     if (!uid || !/^\d{3,10}$/.test(uid)) {
-        return res.status(400).send('Invalid UID');
+        return sendErrorSVG(res, 'Invalid UID', 'UID应为3到10位数字');
     }
 
     // 缓存键
@@ -15,15 +15,10 @@ module.exports = async (req, res) => {
 
     try {
         // 检查缓存
-        if (req.headers['if-none-match'] === cacheKey) {
-            return res.status(304).end();
-        }
-
         const cached = await getCached(cacheKey);
         if (cached) {
             res.setHeader('Content-Type', 'image/svg+xml');
             res.setHeader('Cache-Control', 'public, max-age=3600');
-            res.setHeader('ETag', cacheKey);
             return res.send(cached);
         }
 
@@ -48,11 +43,35 @@ module.exports = async (req, res) => {
         // 返回响应
         res.setHeader('Content-Type', 'image/svg+xml');
         res.setHeader('Cache-Control', 'public, max-age=3600');
-        res.setHeader('ETag', cacheKey);
         res.send(svg);
 
     } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).send('Internal Server Error');
+        console.error('Error:', error);
+        // 返回错误信息的SVG，以便调试
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.status(500).send(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
+        <rect width="400" height="200" fill="#f8f9fa"/>
+        <text x="200" y="100" text-anchor="middle" font-family="Arial" fill="#dc3545">
+          Error: ${error.message}
+        </text>
+      </svg>
+    `);
     }
 };
+
+function sendErrorSVG(res, title, message) {
+    const errorSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
+      <rect width="400" height="200" fill="#f8f9fa"/>
+      <text x="200" y="90" text-anchor="middle" font-family="Arial" font-size="16" fill="#dc3545">
+        ${title}
+      </text>
+      <text x="200" y="120" text-anchor="middle" font-family="Arial" font-size="12" fill="#6c757d">
+        ${message}
+      </text>
+    </svg>
+  `;
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.status(400).send(errorSVG);
+}
