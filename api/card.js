@@ -1,4 +1,4 @@
-// api/card.js - 现代极简版
+// api/card.js - 修正转义错误后的版本
 const axios = require('axios');
 
 const CONFIG = {
@@ -9,12 +9,20 @@ const CONFIG = {
 
 const cache = new Map();
 
-// 图片代理转换，解决 403 问题
+// 核心修正：XML 转义处理
+const esc = (str) => {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'
+  }[m]));
+};
+
+// 核心修正：图片代理 URL 中的 & 必须转义为 &amp;
 const proxyImg = (url) => {
   if (!url) return '';
-  // 使用 weserv.nl 代理 B 站图片，并处理协议头
   const pureUrl = url.replace(/^https?:\/\//, '');
-  return `https://images.weserv.nl/?url=${pureUrl}&default=${encodeURIComponent(url)}`;
+  // 注意这里的 & 变成了 &amp;
+  return `https://images.weserv.nl/?url=${pureUrl}&amp;default=${encodeURIComponent(url)}`;
 };
 
 module.exports = async (req, res) => {
@@ -24,14 +32,13 @@ module.exports = async (req, res) => {
     return sendErrorSVG(res, 'INVALID_UID', '请输入正确的数字UID');
   }
 
-  const cacheKey = `bili_v2_${uid}_${theme}`;
+  const cacheKey = `bili_v3_${uid}_${theme}`;
   if (cacheParam !== 'false' && cache.has(cacheKey)) {
-    const { svg, expiry } = cache.get(cacheKey);
-    if (expiry > Date.now()) return sendSVG(res, svg);
+    const cached = cache.get(cacheKey);
+    if (cached.expiry > Date.now()) return sendSVG(res, cached.svg);
   }
 
   try {
-    // 基础信息并行抓取
     const [userRes, statRes, videoRes] = await Promise.all([
       fetchBili(`/x/space/acc/info?mid=${uid}`),
       fetchBili(`/x/relation/stat?vmid=${uid}`),
@@ -40,17 +47,18 @@ module.exports = async (req, res) => {
 
     const userData = userRes.data;
     const statData = statRes.data;
-    const videoData = videoRes.data?.list?.vlist?.[0];
+    const vlist = videoRes.data?.list?.vlist || [];
+    const videoData = vlist[0];
 
     const data = {
-      name: userData.name,
+      name: esc(userData.name),
       face: proxyImg(userData.face),
       level: userData.level,
-      sign: userData.sign,
+      sign: esc(userData.sign),
       follower: statData.follower,
       following: statData.following,
       video: videoData ? {
-        title: videoData.title,
+        title: esc(videoData.title),
         play: videoData.play,
         cover: proxyImg(videoData.pic),
         length: videoData.length
@@ -62,15 +70,17 @@ module.exports = async (req, res) => {
     sendSVG(res, svg);
 
   } catch (err) {
-    sendErrorSVG(res, 'FETCH_FAILED', '无法获取数据，请稍后重试');
+    sendErrorSVG(res, 'FETCH_FAILED', '无法获取数据，请检查UID或稍后重试');
   }
 };
 
 async function fetchBili(path) {
-  return (await axios.get(`https://api.bilibili.com${path}`, {
+  const res = await axios.get(`https://api.bilibili.com${path}`, {
     headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
     timeout: CONFIG.TIMEOUT
-  })).data;
+  });
+  if (res.data.code !== 0) throw new Error('BiliAPI Error');
+  return res.data;
 }
 
 function generateSVG(data, theme) {
@@ -84,12 +94,6 @@ function generateSVG(data, theme) {
   };
 
   const formatNum = (v) => v >= 10000 ? (v / 10000).toFixed(1) + '万' : v;
-
-  // 内联图标路径 (FontAwesome 风格)
-  const icons = {
-    play: 'M6 4v16a1 1 0 0 0 1.524.852l13-8a1 1 0 0 0 0-1.704l-13-8A1 1 0 0 0 6 4z',
-    users: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z'
-  };
 
   return `
     <svg width="480" height="160" viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg">
@@ -115,48 +119,35 @@ function generateSVG(data, theme) {
         </defs>
         <circle cx="40" cy="40" r="42" fill="${color.accent}" opacity="0.1"/>
         <image href="${data.face}" width="80" height="80" clip-path="url(#circle)"/>
-        
         <rect x="55" y="65" width="28" height="14" rx="4" fill="${color.accent}"/>
-        <text x="69" y="76" text-anchor="middle" class="level">LV${data.level}</text>
+        <text x="69" y="76" text-anchor="middle" class="base level">LV${data.level}</text>
       </g>
 
-      <g transform="translate(124, 35)" class="fade">
+      <g transform="translate(124, 35)" class="base fade">
         <text class="name">${data.name}</text>
-        <text y="24" class="sign">${data.sign.substring(0, 28)}${data.sign.length > 28 ? '...' : ''}</text>
-        
+        <text y="24" class="sign">${data.sign.substring(0, 26)}${data.sign.length > 26 ? '...' : ''}</text>
         <g transform="translate(0, 50)">
-          <path d="${icons.users}" fill="${color.sub}" transform="scale(0.6) translate(0, -18)"/>
-          <text x="18" y="0" class="stat-val">${formatNum(data.follower)}</text>
-          <text x="18" y="18" class="stat-lbl">粉丝</text>
-          
-          <g transform="translate(80, 0)">
+          <text class="stat-val">${formatNum(data.follower)}</text>
+          <text y="18" class="stat-lbl">粉丝</text>
+          <g transform="translate(70, 0)">
             <text class="stat-val">${formatNum(data.following)}</text>
-            <text x="0" y="18" class="stat-lbl">关注</text>
+            <text y="18" class="stat-lbl">关注</text>
           </g>
         </g>
       </g>
 
       ${data.video ? `
-      <g transform="translate(290, 24)" class="fade" style="animation-delay: 0.2s">
+      <g transform="translate(290, 24)" class="base fade" style="animation-delay: 0.1s">
         <rect width="166" height="112" rx="8" fill="${isDark ? '#252525' : '#F6F7F8'}"/>
-        <clipPath id="v-clip">
-          <rect width="150" height="70" rx="4"/>
-        </clipPath>
+        <clipPath id="v-clip"><rect width="150" height="70" rx="4"/></clipPath>
         <g transform="translate(8, 8)">
           <image href="${data.video.cover}" width="150" height="70" preserveAspectRatio="xMidYMid slice" clip-path="url(#v-clip)"/>
           <text y="86" class="video-t">
             <tspan x="0" dy="0">${data.video.title.substring(0, 12)}</tspan>
             <tspan x="0" dy="16">${data.video.title.substring(12, 22)}${data.video.title.length > 22 ? '...' : ''}</tspan>
           </text>
-          
-          <g transform="translate(0, 56)">
-            <rect width="50" height="12" rx="2" fill="black" fill-opacity="0.5"/>
-            <path d="${icons.play}" fill="white" transform="scale(0.3) translate(10, 8)"/>
-            <text x="18" y="9" font-size="8" fill="white">${formatNum(data.video.play)}</text>
-          </g>
         </g>
-      </g>
-      ` : ''}
+      </g>` : ''}
     </svg>
   `;
 }
