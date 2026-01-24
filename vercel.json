@@ -5,13 +5,25 @@
             "memory": 1024
         }
     },
-    "routes": [
+    "headers": [
         {
-            "src": "/api/card",
-            "dest": "/api/card.js"
+            "source": "/api/card",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Content-Security-Policy",
+                    "value": "default-src 'none'; img-src * data:;"
+                }
+            ]
         }
     ],
-    "env": {
-        "NODE_ENV": "production"
-    }
+    "rewrites": [
+        {
+            "source": "/card",
+            "destination": "/api/card"
+        }
+    ]
 }
