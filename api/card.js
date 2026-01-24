@@ -1,68 +1,74 @@
-const { fetchBilibiliData } = require('../../lib/bilibili')
-const { renderSVG } = require('../../lib/render')
-const { getCachedData, setCachedData } = require('../../utils/helpers')
+// api/card.js - 简化调试版
+const axios = require('axios')
 
 module.exports = async (req, res) => {
-    const { uid, theme = 'default', hide = '' } = req.query
-
-    // 参数验证
-    if (!uid || isNaN(uid)) {
-        res.setHeader('Content-Type', 'image/svg+xml')
-        return res.status(400).send(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
-        <rect width="400" height="100" fill="#f8f9fa"/>
-        <text x="200" y="50" text-anchor="middle" fill="#dc3545" font-family="Arial">
-          错误：UID格式不正确
-        </text>
-      </svg>
-    `)
-    }
+    console.log('API被调用，参数:', req.query)
 
     try {
-        // 缓存键（包含所有定制参数）
-        const cacheKey = `bili-${uid}-${theme}-${hide}`
+        const { uid } = req.query
 
-        // 检查缓存
-        const cached = await getCachedData(cacheKey)
-        if (cached) {
-            res.setHeader('Content-Type', 'image/svg+xml')
-            res.setHeader('Cache-Control', 'public, max-age=3600')
-            return res.send(cached)
+        if (!uid) {
+            return res.status(400).send(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
+          <rect width="400" height="100" fill="#f0f0f0"/>
+          <text x="200" y="50" text-anchor="middle" fill="red" font-family="Arial">
+            错误：缺少UID参数
+          </text>
+        </svg>
+      `)
         }
 
-        // 获取B站数据
-        const data = await fetchBilibiliData(uid)
-
-        // 解析hide参数，生成显示选项
-        const hiddenItems = hide.split(',').map(item => item.trim())
-        const options = {
-            showSignature: !hiddenItems.includes('signature'),
-            showLatestVideo: !hiddenItems.includes('latest'),
-            showPopularVideo: !hiddenItems.includes('popular'),
-            showStats: !hiddenItems.includes('stats')
-        }
-
-        // 渲染SVG
-        const svg = await renderSVG(data, { theme, ...options })
-
-        // 设置缓存
-        await setCachedData(cacheKey, svg, 3600)
-
-        // 返回响应
-        res.setHeader('Content-Type', 'image/svg+xml')
-        res.setHeader('Cache-Control', 'public, max-age=3600')
-        res.send(svg)
-
-    } catch (error) {
-        console.error('Error:', error.message)
-        res.setHeader('Content-Type', 'image/svg+xml')
-        res.status(500).send(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
-        <rect width="400" height="100" fill="#f8f9fa"/>
-        <text x="200" y="50" text-anchor="middle" fill="#6c757d" font-family="Arial">
-          服务暂时不可用，请稍后重试
+        // 1. 测试直接返回简单SVG
+        const testSVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="540" height="240" viewBox="0 0 540 240">
+        <rect width="100%" height="100%" fill="#00a1d6" rx="10" ry="10"/>
+        <text x="270" y="120" text-anchor="middle" fill="white" font-family="Arial" font-size="24">
+          Bili-Card 测试版
+        </text>
+        <text x="270" y="160" text-anchor="middle" fill="white" font-family="Arial" font-size="16">
+          UID: ${uid}
+        </text>
+        <text x="270" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="12">
+          服务正常，正在加载数据...
         </text>
       </svg>
-    `)
+    `
+
+        console.log('成功生成SVG，长度:', testSVG.length)
+
+        res.setHeader('Content-Type', 'image/svg+xml')
+        res.setHeader('Cache-Control', 'public, max-age=300')
+        res.send(testSVG)
+
+    } catch (error) {
+        console.error('致命错误:', error)
+        console.error('错误堆栈:', error.stack)
+
+        // 返回包含详细错误信息的SVG（仅用于调试）
+        const errorSVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300">
+        <rect width="100%" height="100%" fill="#ffebee"/>
+        <text x="300" y="50" text-anchor="middle" fill="#d32f2f" font-family="Arial" font-size="20" font-weight="bold">
+          Bili-Card 调试信息
+        </text>
+        <text x="300" y="90" text-anchor="middle" fill="#d32f2f" font-family="Arial" font-size="14">
+          错误类型: ${error.name || 'Unknown'}
+        </text>
+        <text x="300" y="120" text-anchor="middle" fill="#d32f2f" font-family="Arial" font-size="12">
+          错误信息: ${error.message || '无'}
+        </text>
+        <text x="300" y="150" text-anchor="middle" fill="#666" font-family="Arial" font-size="10">
+          时间: ${new Date().toISOString()}
+        </text>
+        <g transform="translate(50, 180)">
+          <text fill="#333" font-family="monospace" font-size="8">
+            ${error.stack ? error.stack.substring(0, 100).replace(/[<>]/g, '') : '无堆栈信息'}
+          </text>
+        </g>
+      </svg>
+    `
+
+        res.setHeader('Content-Type', 'image/svg+xml')
+        res.status(500).send(errorSVG)
     }
 }

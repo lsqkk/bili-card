@@ -1,0 +1,17 @@
+{
+    "functions": {
+        "api/card.js": {
+            "maxDuration": 10,
+            "memory": 1024
+        }
+    },
+    "routes": [
+        {
+            "src": "/api/card",
+            "dest": "/api/card.js"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
+}
