@@ -1,54 +1,56 @@
-// api/card.js - 修正转义错误后的版本
+// api/card.js - 增强鲁棒性版
 const axios = require('axios');
 
 const CONFIG = {
   CACHE_TTL: 3600,
-  TIMEOUT: 8000,
-  USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  TIMEOUT: 6000,
+  // 模拟更真实的浏览器 User-Agent
+  UA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 };
 
 const cache = new Map();
 
-// 核心修正：XML 转义处理
-const esc = (str) => {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, (m) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'
-  }[m]));
-};
+const esc = (str) => !str ? '' : str.replace(/[&<>"']/g, (m) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'
+}[m]));
 
-// 核心修正：图片代理 URL 中的 & 必须转义为 &amp;
 const proxyImg = (url) => {
   if (!url) return '';
   const pureUrl = url.replace(/^https?:\/\//, '');
-  // 注意这里的 & 变成了 &amp;
   return `https://images.weserv.nl/?url=${pureUrl}&amp;default=${encodeURIComponent(url)}`;
 };
 
 module.exports = async (req, res) => {
   const { uid, theme = 'light', cache: cacheParam = 'true' } = req.query;
 
-  if (!uid || !/^\d+$/.test(uid)) {
-    return sendErrorSVG(res, 'INVALID_UID', '请输入正确的数字UID');
-  }
+  if (!uid || !/^\d+$/.test(uid)) return sendErrorSVG(res, 'INVALID_UID', 'UID 格式不正确');
 
-  const cacheKey = `bili_v3_${uid}_${theme}`;
+  const cacheKey = `bili_v4_${uid}_${theme}`;
   if (cacheParam !== 'false' && cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
     if (cached.expiry > Date.now()) return sendSVG(res, cached.svg);
   }
 
   try {
-    const [userRes, statRes, videoRes] = await Promise.all([
-      fetchBili(`/x/space/acc/info?mid=${uid}`),
-      fetchBili(`/x/relation/stat?vmid=${uid}`),
-      fetchBili(`/x/space/arc/search?mid=${uid}&ps=1&tid=0&pn=1&order=pubdate`)
+    // 使用 allSettled 确保局部失败不影响全局渲染
+    const results = await Promise.allSettled([
+      fetchBili(`https://api.bilibili.com/x/space/acc/info?mid=${uid}`),
+      fetchBili(`https://api.bilibili.com/x/relation/stat?vmid=${uid}`),
+      fetchBili(`https://api.bilibili.com/x/space/arc/search?mid=${uid}&ps=1`)
     ]);
 
+    const userRes = results[0].status === 'fulfilled' ? results[0].value : null;
+    const statRes = results[1].status === 'fulfilled' ? results[1].value : null;
+    const videoRes = results[2].status === 'fulfilled' ? results[2].value : null;
+
+    // 基础信息是核心，如果获取不到则报错
+    if (!userRes || userRes.code !== 0) {
+      throw new Error(userRes?.message || 'B站接口拒绝请求');
+    }
+
     const userData = userRes.data;
-    const statData = statRes.data;
-    const vlist = videoRes.data?.list?.vlist || [];
-    const videoData = vlist[0];
+    const statData = statRes?.data || { follower: 0, following: 0 };
+    const videoData = videoRes?.data?.list?.vlist?.[0];
 
     const data = {
       name: esc(userData.name),
@@ -60,8 +62,7 @@ module.exports = async (req, res) => {
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play,
-        cover: proxyImg(videoData.pic),
-        length: videoData.length
+        cover: proxyImg(videoData.pic)
       } : null
     };
 
@@ -70,19 +71,24 @@ module.exports = async (req, res) => {
     sendSVG(res, svg);
 
   } catch (err) {
-    sendErrorSVG(res, 'FETCH_FAILED', '无法获取数据，请检查UID或稍后重试');
+    console.error('Fetch Error:', err.message);
+    sendErrorSVG(res, 'FETCH_FAILED', err.message || 'B站接口限制，请稍后再试');
   }
 };
 
-async function fetchBili(path) {
-  const res = await axios.get(`https://api.bilibili.com${path}`, {
-    headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
+async function fetchBili(url) {
+  const res = await axios.get(url, {
+    headers: {
+      'User-Agent': CONFIG.UA,
+      'Referer': 'https://www.bilibili.com/',
+      'Origin': 'https://www.bilibili.com'
+    },
     timeout: CONFIG.TIMEOUT
   });
-  if (res.data.code !== 0) throw new Error('BiliAPI Error');
   return res.data;
 }
 
+// ... generateSVG, sendSVG, sendErrorSVG 函数保持与上一版一致，但确保 generateSVG 逻辑健壮 ...
 function generateSVG(data, theme) {
   const isDark = theme === 'dark';
   const color = {
@@ -112,11 +118,7 @@ function generateSVG(data, theme) {
       <rect width="480" height="160" rx="12" fill="${color.bg}" stroke="${color.border}" stroke-width="1"/>
       
       <g transform="translate(24, 24)">
-        <defs>
-          <clipPath id="circle">
-            <circle cx="40" cy="40" r="40"/>
-          </clipPath>
-        </defs>
+        <defs><clipPath id="circle"><circle cx="40" cy="40" r="40"/></clipPath></defs>
         <circle cx="40" cy="40" r="42" fill="${color.accent}" opacity="0.1"/>
         <image href="${data.face}" width="80" height="80" clip-path="url(#circle)"/>
         <rect x="55" y="65" width="28" height="14" rx="4" fill="${color.accent}"/>
@@ -143,8 +145,8 @@ function generateSVG(data, theme) {
         <g transform="translate(8, 8)">
           <image href="${data.video.cover}" width="150" height="70" preserveAspectRatio="xMidYMid slice" clip-path="url(#v-clip)"/>
           <text y="86" class="video-t">
-            <tspan x="0" dy="0">${data.video.title.substring(0, 12)}</tspan>
-            <tspan x="0" dy="16">${data.video.title.substring(12, 22)}${data.video.title.length > 22 ? '...' : ''}</tspan>
+            <tspan x="0" dy="0">${data.video.title.substring(0, 11)}</tspan>
+            <tspan x="0" dy="16">${data.video.title.substring(11, 20)}${data.video.title.length > 20 ? '...' : ''}</tspan>
           </text>
         </g>
       </g>` : ''}
@@ -159,10 +161,11 @@ function sendSVG(res, svg) {
 }
 
 function sendErrorSVG(res, code, msg) {
-  const svg = `<svg width="400" height="100" xmlns="http://www.w3.org/2000/svg">
-    <rect width="400" height="100" rx="10" fill="#FFF1F0" stroke="#FFA39E"/>
-    <text x="20" y="45" fill="#CF1322" font-family="sans-serif" font-weight="bold">${code}</text>
-    <text x="20" y="70" fill="#F5222D" font-family="sans-serif" font-size="12">${msg}</text>
+  const svg = `<svg width="480" height="160" viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg">
+    <rect width="478" height="158" x="1" y="1" rx="12" fill="#FFF1F0" stroke="#FFA39E"/>
+    <text x="24" y="45" fill="#CF1322" font-family="sans-serif" font-size="20" font-weight="bold">${code}</text>
+    <text x="24" y="80" fill="#F5222D" font-family="sans-serif" font-size="14">${msg}</text>
+    <text x="24" y="110" fill="#8C8C8C" font-family="sans-serif" font-size="12">提示：可能是该UID请求过于频繁或已被B站风控</text>
   </svg>`;
   res.setHeader('Content-Type', 'image/svg+xml');
   res.status(200).send(svg);
