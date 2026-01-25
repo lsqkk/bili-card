@@ -61,13 +61,13 @@ module.exports = async (req, res) => {
     const relationData = relationRes.status === 'fulfilled' ? relationRes.value.data.data : {};
     const videoData = videoRes.status === 'fulfilled' ? videoRes.value.data?.videos?.[0] : null;
 
-    // 提取获赞数数据
+    // 提取获赞数数据 - 根据实际返回结构调整
     let likeCount = 0;
     if (upstatRes.status === 'fulfilled') {
       const upstatData = upstatRes.value.data;
       if (upstatData.code === 0) {
-        // 优先使用archive.like，如果没有则使用likes
-        likeCount = upstatData.data?.archive?.like || upstatData.data?.likes || 0;
+        // 根据实际返回结构，获赞数在 data.likes 中
+        likeCount = upstatData.data?.likes || 0;
       }
     }
 
