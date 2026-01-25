@@ -21,35 +21,28 @@ const proxyImg = (url) => {
 };
 
 module.exports = async (req, res) => {
-  const { uid, theme = 'default' } = req.query;
-  if (!uid || !/^\d+$/.test(uid)) {
-    // 使用默认主题的错误SVG
-    const { sendErrorSVG } = require('../lib/themes/default');
-    return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
-  }
+  const { uid, theme = 'light' } = req.query;
+  if (!uid || !/^\d+$/.test(uid)) return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
 
   try {
-    // 动态加载所选主题
-    let themeModule;
-    try {
-      themeModule = require(`../lib/themes/${theme}`);
-    } catch (err) {
-      // 如果主题不存在，使用默认主题
-      themeModule = require('../lib/themes/default');
-    }
-
-    const [userRes, relationRes, videoRes] = await Promise.allSettled([
+    const [userRes, relationRes, videoRes, upStatRes] = await Promise.allSettled([
       axios.get(`https://uapis.cn/api/v1/social/bilibili/userinfo?uid=${uid}`, { timeout: CONFIG.TIMEOUT }),
       axios.get(`https://api.bilibili.com/x/relation/stat?vmid=${uid}`, {
         headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
         timeout: CONFIG.TIMEOUT
       }),
-      axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT })
+      axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT }),
+      // 新增：获取用户空间统计信息（包含获赞数）
+      axios.get(`https://api.bilibili.com/x/space/upstat?mid=${uid}`, {
+        headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
+        timeout: CONFIG.TIMEOUT
+      })
     ]);
 
     const userData = userRes.status === 'fulfilled' ? userRes.value.data : {};
     const relationData = relationRes.status === 'fulfilled' ? relationRes.value.data.data : {};
     const videoData = videoRes.status === 'fulfilled' ? videoRes.value.data?.videos?.[0] : null;
+    const upStatData = upStatRes.status === 'fulfilled' ? upStatRes.value.data.data : {};
 
     const data = {
       name: esc(userData.name || 'Unknown'),
@@ -58,6 +51,7 @@ module.exports = async (req, res) => {
       sign: esc(userData.sign || '这个人很懒，什么都没有写...'),
       follower: relationData?.follower || 0,
       following: relationData?.following || 0,
+      likes: upStatData?.likes || 0, // 新增：获赞数
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
@@ -65,12 +59,11 @@ module.exports = async (req, res) => {
       } : null
     };
 
-    const svg = themeModule.generateSVG(data, theme.includes('dark') ? 'dark' : 'light');
+    const svg = generateSVG(data, theme);
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
     res.send(svg);
   } catch (err) {
-    const { sendErrorSVG } = require('../lib/themes/default');
     sendErrorSVG(res, 'FETCH_ERROR', 'API Request Failed');
   }
 };
