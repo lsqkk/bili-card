@@ -14,11 +14,8 @@ const esc = (str) => {
   }[m]));
 };
 
-const proxyImg = (url) => {
-  if (!url) return '';
-  const pureUrl = url.replace(/^https?:\/\//, '');
-  return `https://images.weserv.nl/?url=${pureUrl}&amp;we&amp;default=${encodeURIComponent(url)}`;
-};
+// 移除proxyImg函数，直接使用原始链接
+// 因为GitHub的camo代理会处理外部图片
 
 module.exports = async (req, res) => {
   const { uid, theme = 'default', color = 'blue' } = req.query;
@@ -64,7 +61,8 @@ module.exports = async (req, res) => {
 
     const data = {
       name: esc(cardData.data?.card?.name || 'Unknown'),
-      face: proxyImg(cardData.data?.card?.face),
+      // 直接使用原始头像链接
+      face: cardData.data?.card?.face || '',
       level: cardData.data?.card?.level_info?.current_level || 0,
       sign: esc(cardData.data?.card?.sign || '这个人很懒，什么都没有写...'),
       follower: cardData.data?.follower || 0,
@@ -73,7 +71,8 @@ module.exports = async (req, res) => {
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
-        cover: proxyImg(videoData.cover || videoData.pic),
+        // 直接使用原始封面链接
+        cover: videoData.cover || videoData.pic || '',
       } : null
     };
 
@@ -83,6 +82,7 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
     res.send(svg);
   } catch (err) {
+    console.error('Card generation error:', err);
     const { sendErrorSVG } = require('../lib/themes/default');
     sendErrorSVG(res, 'FETCH_ERROR', 'API Request Failed');
   }
