@@ -56,51 +56,33 @@ module.exports = async (req, res) => {
       themeModule = require('../lib/themes/default');
     }
 
-    // 并行获取所有API数据
-    const [userRes, relationRes, videoRes, upstatRes] = await Promise.allSettled([
-      // 用户基本信息
-      axios.get(`https://uapis.cn/api/v1/social/bilibili/userinfo?uid=${uid}`, { timeout: CONFIG.TIMEOUT }),
-      // 关注/粉丝数
-      axios.get(`https://api.bilibili.com/x/relation/stat?vmid=${uid}`, {
-        headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
+    // 替换原来的多个API调用，使用 x/web-interface/card 接口
+    const [cardRes, videoRes] = await Promise.allSettled([
+      // 用户信息、关注数、粉丝数、获赞数（整合到一个接口）
+      axios.get(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
+        headers: {
+          'User-Agent': CONFIG.USER_AGENT,
+          'Referer': 'https://www.bilibili.com/'
+        },
         timeout: CONFIG.TIMEOUT
       }),
       // 最新视频
-      axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT }),
-      // 获赞数（B站官方API）
-      axios.get(`https://api.bilibili.com/x/space/upstat?mid=${uid}`, {
-        headers: {
-          'User-Agent': CONFIG.USER_AGENT,
-          ...CONFIG.HEADERS
-        },
-        timeout: CONFIG.TIMEOUT
-      })
+      axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT })
     ]);
 
-    // 提取用户数据
-    const userData = userRes.status === 'fulfilled' ? userRes.value.data : {};
-    const relationData = relationRes.status === 'fulfilled' ? relationRes.value.data.data : {};
+    // 提取数据
+    const cardData = cardRes.status === 'fulfilled' ? cardRes.value.data : {};
     const videoData = videoRes.status === 'fulfilled' ? videoRes.value.data?.videos?.[0] : null;
-
-    // 提取获赞数数据 - 根据实际返回结构调整
-    let likeCount = 0;
-    if (upstatRes.status === 'fulfilled') {
-      const upstatData = upstatRes.value.data;
-      if (upstatData.code === 0) {
-        // 根据实际API返回结构，使用data.likes
-        likeCount = upstatData.data?.likes || 0;
-      }
-    }
 
     // 构建数据对象
     const data = {
-      name: esc(userData.name || 'Unknown'),
-      face: proxyImg(userData.face),
-      level: userData.level || 0,
-      sign: esc(userData.sign || '这个人很懒，什么都没有写...'),
-      follower: relationData?.follower || 0,
-      following: relationData?.following || 0,
-      like: likeCount,
+      name: esc(cardData.data?.card?.name || 'Unknown'),
+      face: proxyImg(cardData.data?.card?.face),
+      level: cardData.data?.card?.level_info?.current_level || 0,
+      sign: esc(cardData.data?.card?.sign || '这个人很懒，什么都没有写...'),
+      follower: cardData.data?.follower || 0,
+      following: cardData.data?.card?.attention || 0,
+      like: cardData.data?.like_num || 0,  // 获赞数
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
