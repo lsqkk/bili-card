@@ -25,5 +25,14 @@
             "source": "/card",
             "destination": "/api/card"
         }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/api/$1",
+            "headers": {
+                "cache-control": "no-cache"
+            }
+        }
     ]
 }
