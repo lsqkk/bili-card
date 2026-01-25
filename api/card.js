@@ -1,4 +1,5 @@
 // api/card.js - 支持图片Base64内嵌
+const imageCache = new Map();
 const axios = require('axios');
 
 const CONFIG = {
@@ -18,6 +19,13 @@ const esc = (str) => {
 const fetchImageToBase64 = async (url) => {
   if (!url || !url.startsWith('http')) return '';
 
+  // 检查缓存
+  const cacheKey = url;
+  const cacheEntry = imageCache.get(cacheKey);
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 30 * 60 * 1000) { // 30分钟缓存
+    return cacheEntry.base64;
+  }
+
   try {
     const response = await axios.get(url, {
       responseType: 'arraybuffer',
@@ -31,7 +39,15 @@ const fetchImageToBase64 = async (url) => {
     // 获取图片格式
     const contentType = response.headers['content-type'] || 'image/jpeg';
     const base64 = Buffer.from(response.data, 'binary').toString('base64');
-    return `data:${contentType};base64,${base64}`;
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    // 存入缓存
+    imageCache.set(cacheKey, {
+      base64: dataUrl,
+      timestamp: Date.now()
+    });
+
+    return dataUrl;
   } catch (error) {
     console.warn(`Failed to fetch image: ${url}`, error.message);
     return ''; // 返回空字符串，让前端显示默认样式
