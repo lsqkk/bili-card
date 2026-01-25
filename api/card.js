@@ -1,4 +1,4 @@
-// api/card.js - 更新版（支持主题选择）
+// api/card.js - 完整更新版（添加获赞数API调用）
 const axios = require('axios');
 
 const CONFIG = {
@@ -21,29 +21,57 @@ const proxyImg = (url) => {
 };
 
 module.exports = async (req, res) => {
-  const { uid, theme = 'light' } = req.query;
-  if (!uid || !/^\d+$/.test(uid)) return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
+  const { uid, theme = 'default' } = req.query;
+  if (!uid || !/^\d+$/.test(uid)) {
+    // 使用默认主题的错误SVG
+    const { sendErrorSVG } = require('../lib/themes/default');
+    return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
+  }
 
   try {
-    const [userRes, relationRes, videoRes, upStatRes] = await Promise.allSettled([
+    // 动态加载所选主题
+    let themeModule;
+    try {
+      themeModule = require(`../lib/themes/${theme}`);
+    } catch (err) {
+      // 如果主题不存在，使用默认主题
+      themeModule = require('../lib/themes/default');
+    }
+
+    // 并行获取所有API数据
+    const [userRes, relationRes, videoRes, upstatRes] = await Promise.allSettled([
+      // 用户基本信息
       axios.get(`https://uapis.cn/api/v1/social/bilibili/userinfo?uid=${uid}`, { timeout: CONFIG.TIMEOUT }),
+      // 关注/粉丝数
       axios.get(`https://api.bilibili.com/x/relation/stat?vmid=${uid}`, {
         headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
         timeout: CONFIG.TIMEOUT
       }),
+      // 最新视频
       axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT }),
-      // 新增：获取用户空间统计信息（包含获赞数）
+      // 获赞数（B站官方API）
       axios.get(`https://api.bilibili.com/x/space/upstat?mid=${uid}`, {
         headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
         timeout: CONFIG.TIMEOUT
       })
     ]);
 
+    // 提取用户数据
     const userData = userRes.status === 'fulfilled' ? userRes.value.data : {};
     const relationData = relationRes.status === 'fulfilled' ? relationRes.value.data.data : {};
     const videoData = videoRes.status === 'fulfilled' ? videoRes.value.data?.videos?.[0] : null;
-    const upStatData = upStatRes.status === 'fulfilled' ? upStatRes.value.data.data : {};
 
+    // 提取获赞数数据
+    let likeCount = 0;
+    if (upstatRes.status === 'fulfilled') {
+      const upstatData = upstatRes.value.data;
+      if (upstatData.code === 0) {
+        // 优先使用archive.like，如果没有则使用likes
+        likeCount = upstatData.data?.archive?.like || upstatData.data?.likes || 0;
+      }
+    }
+
+    // 构建数据对象
     const data = {
       name: esc(userData.name || 'Unknown'),
       face: proxyImg(userData.face),
@@ -51,7 +79,7 @@ module.exports = async (req, res) => {
       sign: esc(userData.sign || '这个人很懒，什么都没有写...'),
       follower: relationData?.follower || 0,
       following: relationData?.following || 0,
-      likes: upStatData?.likes || 0, // 新增：获赞数
+      like: likeCount, // 添加获赞数
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
@@ -59,11 +87,13 @@ module.exports = async (req, res) => {
       } : null
     };
 
-    const svg = generateSVG(data, theme);
+    // 生成SVG
+    const svg = themeModule.generateSVG(data, theme.includes('dark') ? 'dark' : 'light');
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
     res.send(svg);
   } catch (err) {
+    const { sendErrorSVG } = require('../lib/themes/default');
     sendErrorSVG(res, 'FETCH_ERROR', 'API Request Failed');
   }
 };
