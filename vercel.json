@@ -1,29 +1,48 @@
 {
-    "functions": {
-        "api/card.js": {
-            "maxDuration": 10,
-            "memory": 1024
-        }
-    },
     "headers": [
         {
             "source": "/api/card",
             "headers": [
                 {
+                    "key": "Content-Security-Policy",
+                    "value": "default-src 'none'; img-src * data:; style-src 'unsafe-inline'; font-src https://fonts.googleapis.com"
+                },
+                {
                     "key": "Access-Control-Allow-Origin",
                     "value": "*"
                 },
                 {
-                    "key": "Content-Security-Policy",
-                    "value": "default-src 'none'; img-src * data:;"
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "Content-Type, Accept"
+                }
+            ]
+        },
+        {
+            "source": "/api/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600, s-maxage=3600"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "X-Frame-Options",
+                    "value": "DENY"
                 }
             ]
         }
     ],
     "rewrites": [
         {
-            "source": "/card",
-            "destination": "/api/card"
+            "source": "/",
+            "destination": "/api/index.js"
         }
     ]
 }
