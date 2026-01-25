@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
       sign: esc(userData.sign || '这个人很懒，什么都没有写...'),
       follower: relationData?.follower || 0,
       following: relationData?.following || 0,
-      like: likeCount, // 添加获赞数
+      like: likeCount,
       video: videoData ? {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
