@@ -119,9 +119,9 @@ curl "https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=
 
 | 用户 | 卡片展示 |
 |------|----------|
-| 老番茄 | ![老番茄卡片](https://bili-card.lsqkk.space/api/card?uid=546195) |
-| 嘉然今天吃什么 | ![嘉然卡片](https://bili-card.lsqkk.space/api/card?uid=672328094) |
-| 陈睿 | ![陈睿卡片](https://bili-card.lsqkk.space/api/card?uid=208259) |
+| 老番茄 | ![老番茄卡片](https://bili-card.lsqkk.space/api/card?uid=546195&color=green) |
+| 嘉然今天吃什么 | ![嘉然卡片](https://bili-card.lsqkk.space/api/card?uid=672328094&color=pink) |
+| 陈睿 | ![陈睿卡片](https://bili-card.lsqkk.space/api/card?uid=208259&color=black) |
 
 ## 🔗 使用场景
 
