@@ -1,0 +1,228 @@
+{
+    "version": "1.0.0",
+    "last_updated": "2024-01-25",
+    "themes": [
+        {
+            "id": "default",
+            "name": "默认主题",
+            "description": "基于B站风格的卡片主题，包含头像、基本信息、统计数据和最新视频",
+            "author": "bili-card",
+            "version": "1.0.0",
+            "created_at": "2024-01-20",
+            "features": [
+                "用户头像和等级显示",
+                "个人签名（支持多行）",
+                "关注/粉丝/获赞数统计",
+                "最新视频卡片展示",
+                "响应式设计"
+            ],
+            "dimensions": {
+                "width": 1945,
+                "height": 894
+            },
+            "example": {
+                "with_uid": "/api/card?uid=2105459088&theme=default&color=blue",
+                "description": "蓝色奇夸克的卡片示例"
+            },
+            "compatibility": {
+                "colors": [
+                    "blue",
+                    "pink",
+                    "green",
+                    "purple",
+                    "dark"
+                ]
+            }
+        },
+        {
+            "id": "modern",
+            "name": "现代化主题",
+            "description": "简约现代的设计风格，更适合现代网站集成",
+            "author": "bili-card",
+            "version": "1.0.0",
+            "created_at": "2024-01-22",
+            "features": [
+                "扁平化设计",
+                "渐变背景",
+                "动画效果",
+                "更紧凑的布局"
+            ],
+            "dimensions": {
+                "width": 540,
+                "height": 220
+            },
+            "status": "planned",
+            "planned_release": "2024-02-01"
+        }
+    ],
+    "colors": [
+        {
+            "id": "blue",
+            "name": "B站蓝",
+            "description": "基于B站官方蓝色的配色方案",
+            "type": "light",
+            "palette": {
+                "bgGradientStart": "#F6F8FC",
+                "bgGradientMiddle": "#ABC0E4",
+                "bgGradientEnd": "#C7D5ED",
+                "strokeColor": "#8FAADC",
+                "textColor": "#2F5597",
+                "cardBg": "#FFFFFF",
+                "accentColor": "#2F5597",
+                "shadowColor": "rgba(0,0,0,0.15)"
+            },
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=blue",
+                "color_palette": "https://via.placeholder.com/300x100/2F5597/FFFFFF?text=B站蓝"
+            },
+            "stats": {
+                "usage": 85,
+                "popularity": "high"
+            }
+        },
+        {
+            "id": "pink",
+            "name": "樱花粉",
+            "description": "柔和粉色系，适合萌系和女性向UP主",
+            "type": "light",
+            "palette": {
+                "bgGradientStart": "#FFF5F7",
+                "bgGradientMiddle": "#FFC9D2",
+                "bgGradientEnd": "#FFE4E8",
+                "strokeColor": "#F8A3B5",
+                "textColor": "#D14D72",
+                "cardBg": "#FFFFFF",
+                "accentColor": "#E75480",
+                "shadowColor": "rgba(0,0,0,0.15)"
+            },
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=pink",
+                "color_palette": "https://via.placeholder.com/300x100/E75480/FFFFFF?text=樱花粉"
+            },
+            "stats": {
+                "usage": 12,
+                "popularity": "medium"
+            }
+        },
+        {
+            "id": "green",
+            "name": "清新绿",
+            "description": "自然绿色系，带来清新舒适的感觉",
+            "type": "light",
+            "palette": {
+                "bgGradientStart": "#F2F8F0",
+                "bgGradientMiddle": "#B8D8B3",
+                "bgGradientEnd": "#D5E8D1",
+                "strokeColor": "#9BC095",
+                "textColor": "#3A7D34",
+                "cardBg": "#FFFFFF",
+                "accentColor": "#4CAF50",
+                "shadowColor": "rgba(0,0,0,0.15)"
+            },
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=green",
+                "color_palette": "https://via.placeholder.com/300x100/4CAF50/FFFFFF?text=清新绿"
+            },
+            "stats": {
+                "usage": 8,
+                "popularity": "low"
+            },
+            "status": "beta"
+        },
+        {
+            "id": "purple",
+            "name": "优雅紫",
+            "description": "神秘紫色系，适合科技和游戏类UP主",
+            "type": "light",
+            "palette": {
+                "bgGradientStart": "#F7F2F9",
+                "bgGradientMiddle": "#D9C6E3",
+                "bgGradientEnd": "#E8DCF0",
+                "strokeColor": "#C4A8D4",
+                "textColor": "#7B3A96",
+                "cardBg": "#FFFFFF",
+                "accentColor": "#9C27B0",
+                "shadowColor": "rgba(0,0,0,0.15)"
+            },
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=purple",
+                "color_palette": "https://via.placeholder.com/300x100/9C27B0/FFFFFF?text=优雅紫"
+            },
+            "stats": {
+                "usage": 5,
+                "popularity": "low"
+            },
+            "status": "beta"
+        },
+        {
+            "id": "dark",
+            "name": "深邃黑",
+            "description": "暗色主题，适合夜间模式或喜欢深色系的用户",
+            "type": "dark",
+            "palette": {
+                "bgGradientStart": "#1A1A1A",
+                "bgGradientMiddle": "#2D2D2D",
+                "bgGradientEnd": "#3A3A3A",
+                "strokeColor": "#555555",
+                "textColor": "#E0E0E0",
+                "cardBg": "#2D2D2D",
+                "accentColor": "#64B5F6",
+                "shadowColor": "rgba(0,0,0,0.4)"
+            },
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=dark",
+                "color_palette": "https://via.placeholder.com/300x100/2D2D2D/64B5F6?text=深邃黑"
+            },
+            "stats": {
+                "usage": 15,
+                "popularity": "medium"
+            }
+        }
+    ],
+    "examples": {
+        "your_uid": {
+            "uid": "2105459088",
+            "name": "蓝色奇夸克",
+            "themes": {
+                "default_blue": "/api/card?uid=2105459088&theme=default&color=blue",
+                "default_pink": "/api/card?uid=2105459088&theme=default&color=pink",
+                "default_green": "/api/card?uid=2105459088&theme=default&color=green",
+                "default_purple": "/api/card?uid=2105459088&theme=default&color=purple",
+                "default_dark": "/api/card?uid=2105459088&theme=default&color=dark"
+            }
+        },
+        "popular_uids": [
+            {
+                "uid": "546195",
+                "name": "老番茄",
+                "example": "/api/card?uid=546195&theme=default&color=blue"
+            },
+            {
+                "uid": "672328094",
+                "name": "嘉然今天吃什么",
+                "example": "/api/card?uid=672328094&theme=default&color=pink"
+            },
+            {
+                "uid": "208259",
+                "name": "陈睿",
+                "example": "/api/card?uid=208259&theme=default&color=dark"
+            }
+        ]
+    },
+    "usage": {
+        "basic": "/api/card?uid={UID}&theme={theme}&color={color}",
+        "with_cache": "/api/card?uid={UID}&theme={theme}&color={color}&cache={seconds}",
+        "query_params": {
+            "uid": "B站用户UID（必填）",
+            "theme": "主题ID（可选，默认：default）",
+            "color": "颜色ID（可选，默认：blue）",
+            "cache": "客户端缓存时间（秒，可选）"
+        }
+    },
+    "endpoints": {
+        "card_generator": "/api/card",
+        "theme_info": "/api/?action=list",
+        "theme_preview": "/api/?action=preview&theme={theme}&color={color}",
+        "item_details": "/api/?action=details&id={id}"
+    }
+}
