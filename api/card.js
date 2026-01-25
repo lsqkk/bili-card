@@ -1,10 +1,28 @@
 // api/card.js - 完整更新版（添加获赞数API调用）
 const axios = require('axios');
 
+// 在 CONFIG 中添加更完整的请求头配置
 const CONFIG = {
   CACHE_TTL: 3600,
   TIMEOUT: 8000,
-  USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+  // 更新 User-Agent 为更真实的浏览器标识
+  USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  // 添加常用的请求头配置
+  HEADERS: {
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Connection': 'keep-alive',
+    'DNT': '1',
+    'Origin': 'https://www.bilibili.com',
+    'Referer': 'https://www.bilibili.com/',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-site',
+    'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"'
+  }
 };
 
 const esc = (str) => {
@@ -51,7 +69,10 @@ module.exports = async (req, res) => {
       axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, { timeout: CONFIG.TIMEOUT }),
       // 获赞数（B站官方API）
       axios.get(`https://api.bilibili.com/x/space/upstat?mid=${uid}`, {
-        headers: { 'User-Agent': CONFIG.USER_AGENT, 'Referer': 'https://www.bilibili.com/' },
+        headers: {
+          'User-Agent': CONFIG.USER_AGENT,
+          ...CONFIG.HEADERS
+        },
         timeout: CONFIG.TIMEOUT
       })
     ]);
@@ -66,7 +87,7 @@ module.exports = async (req, res) => {
     if (upstatRes.status === 'fulfilled') {
       const upstatData = upstatRes.value.data;
       if (upstatData.code === 0) {
-        // 根据实际返回结构，获赞数在 data.likes 中
+        // 根据实际API返回结构，使用data.likes
         likeCount = upstatData.data?.likes || 0;
       }
     }
