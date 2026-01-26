@@ -76,7 +76,7 @@ const fetchLevelIcon = async (level) => {
 };
 
 module.exports = async (req, res) => {
-  const { uid, theme = 'default', color = 'blue' } = req.query;
+  const { uid, theme = 'default', color = 'white' } = req.query;
   if (!uid || !/^\d+$/.test(uid)) {
     const { sendErrorSVG } = require('../lib/themes/default');
     return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
     try {
       colorScheme = require(`../lib/colors/${color}`);
     } catch (err) {
-      colorScheme = require('../lib/colors/blue');
+      colorScheme = require('../lib/colors/white');
     }
 
     // 获取用户数据
