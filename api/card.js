@@ -2,6 +2,7 @@
 const { sendErrorSVG } = require('../lib/utils/errors');
 const imageCache = new Map();
 const axios = require('axios');
+const COMMENTS = require('../lib/utils/comments');
 
 const CONFIG = {
   CACHE_TTL: 3600,
