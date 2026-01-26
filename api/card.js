@@ -175,7 +175,11 @@ module.exports = async (req, res) => {
     };
 
     // 生成SVG，传递颜色方案
-    const svg = themeModule.generateSVG(data, colorScheme.palette);
+    const svgContent = themeModule.generateSVG(data, colorScheme.palette);
+
+    // 统一添加注释
+    const svg = `${COMMENTS.banner}
+${svgContent}`;
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
     res.send(svg);
