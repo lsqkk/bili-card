@@ -22,15 +22,23 @@
 
 ### 自定义主题和颜色
 
-我们提供多种主题和配色方案，让你的卡片更有个性：
+我们提供多种卡片主题，让你的卡片更有个性：
 
-| 配色方案 | 示例URL | 预览 |
-|---------|---------|------|
-| B站蓝 | `/api/card?uid=2105459088&color=blue` | ![blue](https://via.placeholder.com/100/2F5597/FFFFFF?text=蓝) |
-| 樱花粉 | `/api/card?uid=2105459088&color=pink` | ![pink](https://via.placeholder.com/100/E75480/FFFFFF?text=粉) |
-| 清新绿 | `/api/card?uid=2105459088&color=green` | ![green](https://via.placeholder.com/100/4CAF50/FFFFFF?text=绿) |
-| 优雅紫 | `/api/card?uid=2105459088&color=purple` | ![purple](https://via.placeholder.com/100/9C27B0/FFFFFF?text=紫) |
-| 深邃黑 | `/api/card?uid=2105459088&color=dark` | ![dark](https://via.placeholder.com/100/2D2D2D/64B5F6?text=黑) |
+| 主题 | 示例URL |
+|---------|---------|
+| 默认主题 `default` | `/api/card?uid=2105459088` |
+| 现代主题 `modern` | `/api/card?uid=2105459088&theme=modern` |
+
+每种主题均有多种配色方案，卡片搭配更加多样：
+
+| 配色方案 | 示例URL |
+|---------|---------|
+| B站蓝 | `/api/card?uid=2105459088&color=blue` |
+| 樱花粉 | `/api/card?uid=2105459088&color=pink` |
+| 清新绿 | `/api/card?uid=2105459088&color=green` |
+| 优雅紫 | `/api/card?uid=2105459088&color=purple` |
+| 深邃黑 | `/api/card?uid=2105459088&color=dark` |
+
 
 ## 📋 API文档
 
