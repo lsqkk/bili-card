@@ -1,4 +1,5 @@
 // api/card.js - 支持图片Base64内嵌
+const { sendErrorSVG } = require('../lib/utils/errors');
 const imageCache = new Map();
 const axios = require('axios');
 
@@ -78,8 +79,7 @@ const fetchLevelIcon = async (level) => {
 module.exports = async (req, res) => {
   const { uid, theme = 'default', color = 'white' } = req.query;
   if (!uid || !/^\d+$/.test(uid)) {
-    const { sendErrorSVG } = require('../lib/themes/default');
-    return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID');
+    return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID'); // 直接使用导入的函数
   }
 
   try {
@@ -181,7 +181,6 @@ module.exports = async (req, res) => {
     res.send(svg);
   } catch (err) {
     console.error('Card generation error:', err);
-    const { sendErrorSVG } = require('../lib/themes/default');
     sendErrorSVG(res, 'FETCH_ERROR', 'API Request Failed');
   }
 };
