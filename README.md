@@ -22,22 +22,20 @@
 
 ### 自定义主题和颜色
 
-我们提供多种卡片主题，让你的卡片更有个性：
+我们提供多种卡片主题和配色，让你的卡片更有个性：
 
-| 主题 | 示例URL |
-|---------|---------|
-| 默认主题 `default` | `/api/card?uid=2105459088` |
-| 现代主题 `modern` | `/api/card?uid=2105459088&theme=modern` |
 
-每种主题均有多种配色方案，卡片搭配更加多样：
+| 👉配色<br>👇主题 | B站蓝 (`blue`) | 樱花粉 (`pink`) | 清新绿 (`green`) | 优雅紫 (`purple`) | 深邃黑 (`dark`) |
+|-----------|----------------|-----------------|------------------|-------------------|-----------------|
+| **默认 (`default`)** | ![default-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=blue) | ![default-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=pink) | ![default-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=green) | ![default-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=purple) | ![default-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=dark) |
+| **现代 (`modern`)** | ![modern-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=blue) | ![modern-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=pink) | ![modern-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=green) | ![modern-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=purple) | ![modern-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=dark) |
+| **B站小电视 (`btv`)** | ![btv-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=blue) | ![btv-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=pink) | ![btv-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=green) | ![btv-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=purple) | ![btv-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=dark) |
+| **极简 (`simple`)** | ![simple-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=blue) | ![simple-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=pink) | ![simple-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=green) | ![simple-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=purple) | ![simple-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=dark) |
 
-| 配色方案 | 示例URL |
-|---------|---------|
-| B站蓝 | `/api/card?uid=2105459088&color=blue` |
-| 樱花粉 | `/api/card?uid=2105459088&color=pink` |
-| 清新绿 | `/api/card?uid=2105459088&color=green` |
-| 优雅紫 | `/api/card?uid=2105459088&color=purple` |
-| 深邃黑 | `/api/card?uid=2105459088&color=dark` |
+**参数说明：**
+- `uid`: B站用户ID（示例使用：2105459088）
+- `theme`: 主题（default/modern/btv/simple）
+- `color`: 配色（blue/pink/green/purple/dark）
 
 
 ## 📋 API文档

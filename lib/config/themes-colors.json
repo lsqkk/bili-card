@@ -8,7 +8,7 @@
             "description": "基于B站风格的卡片主题，包含头像、基本信息、统计数据和最新视频",
             "author": "bili-card",
             "version": "1.0.0",
-            "created_at": "2024-01-20",
+            "created_at": "2026-01-24",
             "features": [
                 "用户头像和等级显示",
                 "个人签名（支持多行）",
@@ -37,22 +37,86 @@
         {
             "id": "modern",
             "name": "现代化主题",
-            "description": "简约现代的设计风格，更适合现代网站集成",
+            "description": "更现代的设计风格，更适合现代网站集成",
             "author": "bili-card",
             "version": "1.0.0",
-            "created_at": "2024-01-22",
+            "created_at": "2026-01-25",
             "features": [
-                "扁平化设计",
-                "渐变背景",
-                "动画效果",
-                "更紧凑的布局"
+                "扁平化设计"
             ],
             "dimensions": {
                 "width": 540,
                 "height": 220
             },
-            "status": "planned",
-            "planned_release": "2024-02-01"
+            "example": {
+                "with_uid": "/api/card?uid=2105459088&theme=modern&color=green",
+                "description": "蓝色奇夸克的卡片示例"
+            },
+            "compatibility": {
+                "colors": [
+                    "blue",
+                    "pink",
+                    "green",
+                    "purple",
+                    "dark"
+                ]
+            }
+        },
+        {
+            "id": "btv",
+            "name": "B站小电视主题",
+            "description": "模仿B站小电视图标，适合轻松场景",
+            "author": "bili-card",
+            "version": "1.0.0",
+            "created_at": "2026-01-26",
+            "features": [
+                "扁平化设计"
+            ],
+            "dimensions": {
+                "width": 540,
+                "height": 220
+            },
+            "example": {
+                "with_uid": "/api/card?uid=2105459088&theme=btv&color=pink",
+                "description": "蓝色奇夸克的卡片示例"
+            },
+            "compatibility": {
+                "colors": [
+                    "blue",
+                    "pink",
+                    "green",
+                    "purple",
+                    "dark"
+                ]
+            }
+        },
+        {
+            "id": "simple",
+            "name": "极简主题",
+            "description": "极简主题",
+            "author": "bili-card",
+            "version": "1.0.0",
+            "created_at": "2026-01-26",
+            "features": [
+                "扁平化设计"
+            ],
+            "dimensions": {
+                "width": 540,
+                "height": 220
+            },
+            "example": {
+                "with_uid": "/api/card?uid=2105459088&theme=simple&color=dark",
+                "description": "蓝色奇夸克的卡片示例"
+            },
+            "compatibility": {
+                "colors": [
+                    "blue",
+                    "pink",
+                    "green",
+                    "purple",
+                    "dark"
+                ]
+            }
         }
     ],
     "colors": [
