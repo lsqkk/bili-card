@@ -4,7 +4,7 @@
 
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-green)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
-[![API Status](https://img.shields.io/badge/API-Live-success)](https://bili-card.lsqkk.space/api/card?uid=2105459088)
+[![API Status](https://img.shields.io/badge/API-Live-success)](https://bili-card.130923.xyz/api/card?uid=2105459088)
 
 ## ✨ 即刻体验
 
@@ -17,7 +17,7 @@
 获取指定B站用户的卡片，只需在URL中传入用户的UID：
 
 ```md
-![蓝色奇夸克的B站卡片](https://bili-card.lsqkk.space/api/card?uid=2105459088)
+![蓝色奇夸克的B站卡片](https://bili-card.130923.xyz/api/card?uid=2105459088)
 ```
 
 ### 自定义主题和颜色
@@ -27,10 +27,10 @@
 
 | 👉配色<br>👇主题 | 极简白 (`white`) | B站蓝 (`blue`) | 樱花粉 (`pink`) | 清新绿 (`green`) | 优雅紫 (`purple`) | 深邃黑 (`dark`) |
 |-----------|----------------|----------------|-----------------|------------------|-------------------|-----------------|
-| **默认 (`default`)** | ![default-white](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=white) | ![default-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=blue) | ![default-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=pink) | ![default-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=green) | ![default-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=purple) | ![default-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=dark) |
-| **现代 (`modern`)** | ![modern-white](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=white) | ![modern-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=blue) | ![modern-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=pink) | ![modern-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=green) | ![modern-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=purple) | ![modern-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=modern&color=dark) |
-| **B站小电视 (`btv`)** | ![btv-white](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=white) | ![btv-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=blue) | ![btv-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=pink) | ![btv-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=green) | ![btv-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=purple) | ![btv-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=btv&color=dark) |
-| **极简 (`simple`)** | ![simple-white](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=white) |![simple-blue](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=blue) | ![simple-pink](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=pink) | ![simple-green](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=green) | ![simple-purple](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=purple) | ![simple-dark](https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=simple&color=dark) |
+| **默认 (`default`)** | ![default-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=white) | ![default-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=blue) | ![default-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=pink) | ![default-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=green) | ![default-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=purple) | ![default-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=dark) |
+| **现代 (`modern`)** | ![modern-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=white) | ![modern-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=blue) | ![modern-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=pink) | ![modern-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=green) | ![modern-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=purple) | ![modern-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=dark) |
+| **B站小电视 (`btv`)** | ![btv-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=white) | ![btv-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=blue) | ![btv-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=pink) | ![btv-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=green) | ![btv-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=purple) | ![btv-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=dark) |
+| **极简 (`simple`)** | ![simple-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=white) |![simple-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=blue) | ![simple-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=pink) | ![simple-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=green) | ![simple-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=purple) | ![simple-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=dark) |
 
 **参数说明：**
 - `uid`: B站用户ID（示例使用：2105459088）
@@ -55,7 +55,7 @@
 **示例请求**：
 
 ```bash
-curl "https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=blue"
+curl "https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=blue"
 ```
 
 **响应**：
@@ -125,16 +125,16 @@ curl "https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=
 
 | 用户 | 卡片展示 |
 |------|----------|
-| 老番茄 | ![老番茄卡片](https://bili-card.lsqkk.space/api/card?uid=546195&color=green) |
-| 嘉然今天吃什么 | ![嘉然卡片](https://bili-card.lsqkk.space/api/card?uid=672328094&color=pink) |
-| 陈睿 | ![陈睿卡片](https://bili-card.lsqkk.space/api/card?uid=208259&color=dark) |
+| 老番茄 | ![老番茄卡片](https://bili-card.130923.xyz/api/card?uid=546195&color=green) |
+| 嘉然今天吃什么 | ![嘉然卡片](https://bili-card.130923.xyz/api/card?uid=672328094&color=pink) |
+| 陈睿 | ![陈睿卡片](https://bili-card.130923.xyz/api/card?uid=208259&color=dark) |
 
 ## 🔗 使用场景
 
 ### 个人网站
 在个人简历或作品集中展示B站身份：
 ```html
-<img src="https://bili-card.lsqkk.space/api/card?uid=你的UID" 
+<img src="https://bili-card.130923.xyz/api/card?uid=你的UID" 
      alt="Bilibili卡片" 
      width="540" 
      height="220">
@@ -143,7 +143,7 @@ curl "https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=
 ### GitHub Profile
 在GitHub个人主页展示B站信息：
 ```markdown
-![我的B站卡片](https://bili-card.lsqkk.space/api/card?uid=你的UID)
+![我的B站卡片](https://bili-card.130923.xyz/api/card?uid=你的UID)
 ```
 
 ### 技术博客
@@ -151,7 +151,7 @@ curl "https://bili-card.lsqkk.space/api/card?uid=2105459088&theme=default&color=
 ```html
 <div class="author-card">
   <h3>关于作者</h3>
-  <img src="https://bili-card.lsqkk.space/api/card?uid=你的UID" 
+  <img src="https://bili-card.130923.xyz/api/card?uid=你的UID" 
        alt="作者B站卡片">
 </div>
 ```
@@ -184,6 +184,6 @@ https://space.bilibili.com/12345678
 
 ---
 
-**立即开始** → `https://bili-card.lsqkk.space/api/card?uid=你的UID`
+**立即开始** → `https://bili-card.130923.xyz/api/card?uid=你的UID`
 
 希望这张小小的卡片能为你的线上身份增添一抹独特的色彩。如果你喜欢这个项目，别忘了给我们一个⭐️！
