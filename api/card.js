@@ -17,24 +17,43 @@ const esc = (str) => {
   }[m]));
 };
 
-// 下载图片并转换为Base64
+
+const proxyImageUrl = (url) => {
+  if (!url) return '';
+
+  // 如果是B站图片，使用代理
+  if (url.includes('hdslb.com') || url.includes('bilivideo.com') || url.includes('bilibili.com')) {
+    // 使用第三方图片代理服务
+    const encodedUrl = encodeURIComponent(url);
+    return `https://images.weserv.nl/?url=${encodedUrl}&w=400&h=225&output=webp&q=80`;
+  }
+
+  return url;
+};
+
+// 修改 fetchImageToBase64 函数，添加代理
 const fetchImageToBase64 = async (url) => {
   if (!url || !url.startsWith('http')) return '';
 
+  // 使用代理后的URL
+  const proxiedUrl = proxyImageUrl(url);
+
   // 检查缓存
-  const cacheKey = url;
+  const cacheKey = url; // 使用原始URL作为缓存键
   const cacheEntry = imageCache.get(cacheKey);
   if (cacheEntry && Date.now() - cacheEntry.timestamp < 30 * 60 * 1000) { // 30分钟缓存
     return cacheEntry.base64;
   }
 
   try {
-    const response = await axios.get(url, {
+    const response = await axios.get(proxiedUrl, {
       responseType: 'arraybuffer',
       timeout: 5000,
       headers: {
         'User-Agent': CONFIG.USER_AGENT,
-        'Referer': 'https://www.bilibili.com/'
+        'Accept': 'image/webp,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        // 注意：代理服务可能不需要Referer，所以这里可以移除或修改
       }
     });
 
@@ -51,10 +70,40 @@ const fetchImageToBase64 = async (url) => {
 
     return dataUrl;
   } catch (error) {
-    console.warn(`Failed to fetch image: ${url}`, error.message);
+    console.warn(`Failed to fetch image: ${url} (proxied: ${proxiedUrl})`, error.message);
+
+    // 尝试使用原始URL作为备选方案
+    if (proxiedUrl !== url) {
+      try {
+        const fallbackResponse = await axios.get(url, {
+          responseType: 'arraybuffer',
+          timeout: 3000,
+          headers: {
+            'User-Agent': CONFIG.USER_AGENT,
+            'Referer': 'https://www.bilibili.com/',
+            'Origin': 'https://www.bilibili.com'
+          }
+        });
+
+        const contentType = fallbackResponse.headers['content-type'] || 'image/jpeg';
+        const base64 = Buffer.from(fallbackResponse.data, 'binary').toString('base64');
+        const dataUrl = `data:${contentType};base64,${base64}`;
+
+        imageCache.set(cacheKey, {
+          base64: dataUrl,
+          timestamp: Date.now()
+        });
+
+        return dataUrl;
+      } catch (fallbackError) {
+        console.warn(`Fallback also failed for image: ${url}`, fallbackError.message);
+      }
+    }
+
     return ''; // 返回空字符串，让前端显示默认样式
   }
 };
+
 
 // 获取等级图标的Base64（从CDN下载）
 const fetchLevelIcon = async (level) => {
