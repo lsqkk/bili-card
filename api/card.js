@@ -150,6 +150,7 @@ module.exports = async (req, res) => {
     }
 
     // 获取用户数据
+    // 修改视频数据API请求和处理
     const [cardRes, videoRes] = await Promise.allSettled([
       axios.get(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
         headers: {
@@ -158,13 +159,36 @@ module.exports = async (req, res) => {
         },
         timeout: CONFIG.TIMEOUT
       }),
-      axios.get(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, {
+      // 替换为B站置顶视频API
+      axios.get(`https://api.bilibili.com/x/space/top/arc?vmid=${uid}`, {
+        headers: {
+          'User-Agent': CONFIG.USER_AGENT,
+          'Referer': 'https://www.bilibili.com/'
+        },
         timeout: CONFIG.TIMEOUT
       })
     ]);
 
     const cardData = cardRes.status === 'fulfilled' ? cardRes.value.data : {};
-    const videoData = videoRes.status === 'fulfilled' ? videoRes.value.data?.videos?.[0] : null;
+    let videoData = null;
+
+
+    // 处理置顶视频响应
+    if (videoRes.status === 'fulfilled' && videoRes.value.data?.code === 0) {
+      const topArc = videoRes.value.data.data;
+      if (topArc) {
+        videoData = {
+          title: esc(topArc.title || ''),
+          cover: topArc.pic || '',
+          play: topArc.stat?.view || 0,      // 播放数（原play字段）
+          coin: topArc.stat?.coin || 0,      // 硬币数
+          share: topArc.stat?.share || 0,    // 分享数
+          like: topArc.stat?.like || 0,      // 点赞数
+          bvid: topArc.bvid || '',           // 可选：视频BV号
+          pubdate: topArc.pubdate || 0       // 可选：发布时间
+        };
+      }
+    }
 
     // 并行下载所有图片到Base64
     const imagePromises = [];
@@ -177,12 +201,16 @@ module.exports = async (req, res) => {
 
     // 视频封面
     let videoCoverBase64 = '';
-    if (videoData) {
-      const coverUrl = videoData.cover || videoData.pic;
-      if (coverUrl) {
-        imagePromises.push(fetchImageToBase64(coverUrl).then(base64 => ({ type: 'videoCover', base64 })));
-      }
+
+    if (videoData && videoData.cover) {
+      imagePromises.push(
+        fetchImageToBase64(videoData.cover).then(base64 => ({
+          type: 'videoCover',
+          base64
+        }))
+      );
     }
+
 
     // 等级图标
     const level = cardData.data?.card?.level_info?.current_level || 0;
@@ -209,18 +237,13 @@ module.exports = async (req, res) => {
     // 构建数据对象
     const data = {
       name: esc(cardData.data?.card?.name || 'Unknown'),
-      face: images.face, // 使用Base64
+      face: images.face,
       level: level,
       sign: esc(cardData.data?.card?.sign || '这个人很懒，什么都没有写...'),
       follower: cardData.data?.follower || 0,
       following: cardData.data?.card?.attention || 0,
       like: cardData.data?.like_num || 0,
-      video: videoData ? {
-        title: esc(videoData.title),
-        play: videoData.play_count || 0,
-        cover: images.videoCover || '', // 使用Base64
-      } : null,
-      // 添加等级图标的Base64
+      video: videoData, // 直接使用处理好的视频对象（含coin/share/like等）
       levelIcon: images.levelIcon
     };
 
