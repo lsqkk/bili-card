@@ -18,92 +18,92 @@ const esc = (str) => {
 };
 
 
-const proxyImageUrl = (url) => {
+// 备选代理服务（仅当直连失败时使用）
+const PROXY_SERVICES = [
+  (url) => `https://images.weserv.nl/?url=${encodeURIComponent(url)}&output=webp`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
+
+const proxyImageUrl = (url, retryCount = 0) => {
   if (!url) return '';
-
-  // 如果是B站图片，使用代理
+  // 仅对B站图片使用代理
   if (url.includes('hdslb.com') || url.includes('bilivideo.com') || url.includes('bilibili.com')) {
-    // 使用第三方图片代理服务
-    const encodedUrl = encodeURIComponent(url);
-    return `https://images.weserv.nl/?url=${encodedUrl}&w=400&h=225&output=webp&q=80`;
+    const serviceIndex = retryCount % PROXY_SERVICES.length;
+    return PROXY_SERVICES[serviceIndex](url);
   }
-
   return url;
 };
 
-// 修改 fetchImageToBase64 函数，添加代理
 const fetchImageToBase64 = async (url) => {
   if (!url || !url.startsWith('http')) return '';
 
-  // 使用代理后的URL
-  const proxiedUrl = proxyImageUrl(url);
+  // 统一转为HTTPS（B站CDN支持）
+  const secureUrl = url.replace(/^http:\/\//i, 'https://');
+  const cacheKey = secureUrl; // 使用HTTPS URL作为缓存键
 
   // 检查缓存
-  const cacheKey = url; // 使用原始URL作为缓存键
   const cacheEntry = imageCache.get(cacheKey);
-  if (cacheEntry && Date.now() - cacheEntry.timestamp < 30 * 60 * 1000) { // 30分钟缓存
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 30 * 60 * 1000) {
     return cacheEntry.base64;
   }
 
-  try {
-    const response = await axios.get(proxiedUrl, {
-      responseType: 'arraybuffer',
-      timeout: 5000,
-      headers: {
+  // 尝试下载（直连 + 最多3次代理轮询）
+  for (let attempt = 0; attempt <= PROXY_SERVICES.length; attempt++) {
+    try {
+      let requestUrl = secureUrl;
+      let headers = {
         'User-Agent': CONFIG.USER_AGENT,
         'Accept': 'image/webp,image/*,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        // 注意：代理服务可能不需要Referer，所以这里可以移除或修改
+      };
+
+      // 第0次：直连（带B站Referer）
+      if (attempt === 0) {
+        headers.Referer = 'https://www.bilibili.com/';
+        headers.Origin = 'https://www.bilibili.com';
+      } else {
+        // 后续尝试使用代理
+        requestUrl = proxyImageUrl(secureUrl, attempt - 1);
+        // 代理服务通常不需要Referer，移除避免干扰
+        delete headers.Referer;
+        delete headers.Origin;
       }
-    });
 
-    // 获取图片格式
-    const contentType = response.headers['content-type'] || 'image/jpeg';
-    const base64 = Buffer.from(response.data, 'binary').toString('base64');
-    const dataUrl = `data:${contentType};base64,${base64}`;
+      const response = await axios.get(requestUrl, {
+        responseType: 'arraybuffer',
+        timeout: 8000, // 增加超时时间
+        headers,
+        // 对代理请求允许重定向
+        maxRedirects: 5,
+      });
 
-    // 存入缓存
-    imageCache.set(cacheKey, {
-      base64: dataUrl,
-      timestamp: Date.now()
-    });
-
-    return dataUrl;
-  } catch (error) {
-    console.warn(`Failed to fetch image: ${url} (proxied: ${proxiedUrl})`, error.message);
-
-    // 尝试使用原始URL作为备选方案
-    if (proxiedUrl !== url) {
-      try {
-        const fallbackResponse = await axios.get(url, {
-          responseType: 'arraybuffer',
-          timeout: 3000,
-          headers: {
-            'User-Agent': CONFIG.USER_AGENT,
-            'Referer': 'https://www.bilibili.com/',
-            'Origin': 'https://www.bilibili.com'
-          }
-        });
-
-        const contentType = fallbackResponse.headers['content-type'] || 'image/jpeg';
-        const base64 = Buffer.from(fallbackResponse.data, 'binary').toString('base64');
-        const dataUrl = `data:${contentType};base64,${base64}`;
-
-        imageCache.set(cacheKey, {
-          base64: dataUrl,
-          timestamp: Date.now()
-        });
-
-        return dataUrl;
-      } catch (fallbackError) {
-        console.warn(`Fallback also failed for image: ${url}`, fallbackError.message);
+      // 确保响应是图片
+      const contentType = response.headers['content-type'] || '';
+      if (!contentType.startsWith('image/')) {
+        throw new Error(`Invalid content type: ${contentType}`);
       }
+
+      const base64 = Buffer.from(response.data, 'binary').toString('base64');
+      const dataUrl = `data:${contentType};base64,${base64}`;
+
+      // 存入缓存
+      imageCache.set(cacheKey, {
+        base64: dataUrl,
+        timestamp: Date.now()
+      });
+
+      return dataUrl;
+    } catch (error) {
+      console.warn(`[Attempt ${attempt}] Failed to fetch image: ${url}`, error.message);
+      // 继续下一次尝试
     }
-
-    return ''; // 返回空字符串，让前端显示默认样式
   }
-};
 
+  // 所有尝试都失败
+  console.error(`All attempts failed for image: ${url}`);
+  return '';
+};
 
 // 获取等级图标的Base64（从CDN下载）
 const fetchLevelIcon = async (level) => {
