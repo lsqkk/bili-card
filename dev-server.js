@@ -66,7 +66,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(`
       <h1>bili-card 本地开发服务器</h1>
-      <p>API 测试: <a href="/api/card?uid=1">/api/card?uid=1</a></p>
+      <p>API 测试: <a href="/api/card?uid=2105459088">/api/card?uid=2105459088</a></p>
       <p>生产部署: <code>npm run deploy</code> (Vercel)</p>
       <p>本地 Vercel: <code>npm run dev</code> (需安装 Vercel CLI)</p>
     `);
@@ -79,6 +79,6 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`✅ bili-card 开发服务器运行在 http://localhost:${PORT}`);
-  console.log(`📦 API 测试: http://localhost:${PORT}/api/card?uid=1`);
+  console.log(`📦 API 测试: http://localhost:${PORT}/api/card?uid=2105459088`);
   console.log(`⚠️  注意: 图片代理(cdn.jsdelivr.net)需要网络连接`);
 });
