@@ -3,7 +3,13 @@
     "allow": [
       "Bash(node -e ' *)",
       "Bash(git *)",
-      "Bash(node --test test/*.test.js)"
+      "Bash(node --test test/*.test.js)",
+      "Bash(cd /d/ git/lsqkk/bili-card)",
+      "Bash(node dev-server.js)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(pkill -f \"node dev-server\")",
+      "Bash(npx kill-port *)",
+      "Bash(curl -s http://localhost:3000/api/card?uid=2105459088\\\\&theme=default)"
     ]
   }
 }
