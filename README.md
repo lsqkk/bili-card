@@ -50,7 +50,7 @@
 |--------|------|------|---------|------|
 | `uid` | string | 是 | - | B站用户UID |
 | `theme` | string | 否 | `default` | 主题样式 |
-| `color` | string | 否 | `blue` | 配色方案 |
+| `color` | string | 否 | `white` | 配色方案 |
 
 **示例请求**：
 
@@ -159,7 +159,7 @@ curl "https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=b
 ## 🤝 贡献与支持
 
 ### 问题反馈
-如果您发现任何问题或有改进建议，请通过[GitHub Issues](https://github.com/your-repo/issues)提交。
+如果您发现任何问题或有改进建议，请通过 [GitHub Issues](https://github.com/lsqkk/bili-card/issues) 提交。
 
 ### 开发贡献
 我们欢迎社区贡献，特别是：
@@ -167,8 +167,6 @@ curl "https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=b
 - 更多的配色方案
 - 性能优化
 - 文档改进
-
-请查看[贡献指南](CONTRIBUTING.md)了解如何开始。
 
 ### 寻找你的UID
 不知道自己的B站UID？访问你的B站个人主页，URL中的数字就是你的UID：

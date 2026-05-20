@@ -5,7 +5,7 @@
             "headers": [
                 {
                     "key": "Content-Security-Policy",
-                    "value": "default-src 'none'; img-src * data:; style-src 'unsafe-inline'; font-src https://fonts.googleapis.com"
+                    "value": "default-src 'none'; img-src * data:; style-src 'unsafe-inline'; font-src https://fonts.gstatic.com"
                 },
                 {
                     "key": "Access-Control-Allow-Origin",
@@ -18,6 +18,18 @@
                 {
                     "key": "Access-Control-Allow-Headers",
                     "value": "Content-Type, Accept"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600, s-maxage=3600"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "X-Frame-Options",
+                    "value": "DENY"
                 }
             ]
         },

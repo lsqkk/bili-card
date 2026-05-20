@@ -125,16 +125,6 @@
             "name": "B站蓝",
             "description": "基于B站官方蓝色的配色方案",
             "type": "light",
-            "palette": {
-                "bgGradientStart": "#F6F8FC",
-                "bgGradientMiddle": "#ABC0E4",
-                "bgGradientEnd": "#C7D5ED",
-                "strokeColor": "#8FAADC",
-                "textColor": "#2F5597",
-                "cardBg": "#FFFFFF",
-                "accentColor": "#2F5597",
-                "shadowColor": "rgba(0,0,0,0.15)"
-            },
             "preview_images": {
                 "example": "/api/card?uid=2105459088&theme=default&color=blue",
                 "color_palette": "https://via.placeholder.com/300x100/2F5597/FFFFFF?text=B站蓝"
@@ -149,16 +139,6 @@
             "name": "樱花粉",
             "description": "柔和粉色系，适合萌系和女性向UP主",
             "type": "light",
-            "palette": {
-                "bgGradientStart": "#FFF5F7",
-                "bgGradientMiddle": "#FFC9D2",
-                "bgGradientEnd": "#FFE4E8",
-                "strokeColor": "#F8A3B5",
-                "textColor": "#D14D72",
-                "cardBg": "#FFFFFF",
-                "accentColor": "#E75480",
-                "shadowColor": "rgba(0,0,0,0.15)"
-            },
             "preview_images": {
                 "example": "/api/card?uid=2105459088&theme=default&color=pink",
                 "color_palette": "https://via.placeholder.com/300x100/E75480/FFFFFF?text=樱花粉"
@@ -173,16 +153,6 @@
             "name": "清新绿",
             "description": "自然绿色系，带来清新舒适的感觉",
             "type": "light",
-            "palette": {
-                "bgGradientStart": "#F2F8F0",
-                "bgGradientMiddle": "#B8D8B3",
-                "bgGradientEnd": "#D5E8D1",
-                "strokeColor": "#9BC095",
-                "textColor": "#3A7D34",
-                "cardBg": "#FFFFFF",
-                "accentColor": "#4CAF50",
-                "shadowColor": "rgba(0,0,0,0.15)"
-            },
             "preview_images": {
                 "example": "/api/card?uid=2105459088&theme=default&color=green",
                 "color_palette": "https://via.placeholder.com/300x100/4CAF50/FFFFFF?text=清新绿"
@@ -198,16 +168,6 @@
             "name": "优雅紫",
             "description": "神秘紫色系，适合科技和游戏类UP主",
             "type": "light",
-            "palette": {
-                "bgGradientStart": "#F7F2F9",
-                "bgGradientMiddle": "#D9C6E3",
-                "bgGradientEnd": "#E8DCF0",
-                "strokeColor": "#C4A8D4",
-                "textColor": "#7B3A96",
-                "cardBg": "#FFFFFF",
-                "accentColor": "#9C27B0",
-                "shadowColor": "rgba(0,0,0,0.15)"
-            },
             "preview_images": {
                 "example": "/api/card?uid=2105459088&theme=default&color=purple",
                 "color_palette": "https://via.placeholder.com/300x100/9C27B0/FFFFFF?text=优雅紫"
@@ -223,16 +183,6 @@
             "name": "深邃黑",
             "description": "暗色主题，适合夜间模式或喜欢深色系的用户",
             "type": "dark",
-            "palette": {
-                "bgGradientStart": "#1A1A1A",
-                "bgGradientMiddle": "#2D2D2D",
-                "bgGradientEnd": "#3A3A3A",
-                "strokeColor": "#555555",
-                "textColor": "#E0E0E0",
-                "cardBg": "#2D2D2D",
-                "accentColor": "#64B5F6",
-                "shadowColor": "rgba(0,0,0,0.4)"
-            },
             "preview_images": {
                 "example": "/api/card?uid=2105459088&theme=default&color=dark",
                 "color_palette": "https://via.placeholder.com/300x100/2D2D2D/64B5F6?text=深邃黑"
