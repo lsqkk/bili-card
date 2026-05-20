@@ -1,33 +1,27 @@
-# 启动本地服务器
+# ⚠️ 此文件已弃用 - 仅提供静态文件服务，无法运行 API
+# 请改用以下命令之一：
+#   node dev-server.js    # 本地开发（可测试 API）
+#   npm run dev            # Vercel 本地环境（需安装 Vercel CLI）
+#   npm run deploy         # 部署到 Vercel
 
 import http.server
 import socketserver
 import os
-from urllib.parse import urlparse
 
-# 端口
 PORT = 8000
 
-class HTMLAwareHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
-        # 先获取原始路径
         path = super().translate_path(path)
-        
-        # 如果请求的路径不存在，但对应的 .html 文件存在
         if not os.path.exists(path):
             html_path = path + '.html'
             if os.path.exists(html_path):
                 return html_path
-                
-            # 处理目录索引的情况
-            dir_path = path
-            if os.path.isdir(dir_path) and os.path.exists(os.path.join(dir_path, 'index.html')):
-                return os.path.join(dir_path, 'index.html')
-                
+            if os.path.isdir(path) and os.path.exists(os.path.join(path, 'index.html')):
+                return os.path.join(path, 'index.html')
         return path
 
-
-with socketserver.TCPServer(("", PORT), HTMLAwareHTTPRequestHandler) as httpd:
-    print(f"服务器运行在 http://localhost:{PORT}")
-    print("支持 /a -> /a.html 自动映射")
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    print(f"⚠️  静态文件服务器 (无法运行 API): http://localhost:{PORT}")
+    print(f"📌 请改用: node dev-server.js")
     httpd.serve_forever()

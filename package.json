@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "B站用户信息SVG卡片生成器",
     "scripts": {
-        "dev": "vercel dev",
+        "dev": "node dev-server.js",
+        "dev:vercel": "vercel dev",
+        "test": "node --test test/*.test.js",
         "deploy": "vercel --prod"
     },
     "engines": {

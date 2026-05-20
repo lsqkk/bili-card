@@ -1,6 +1,9 @@
 // api/card.js - 支持图片Base64内嵌
 const { sendErrorSVG } = require('../lib/utils/errors');
 const { imageCache, esc } = require('../lib/utils/common');
+const { validatePalette } = require('../lib/utils/styleGenerator');
+const { getLevelIcon } = require('../lib/level-icons');
+const { rateLimit } = require('../lib/rate-limit');
 const COMMENTS = require('../lib/utils/comments');
 
 const CONFIG = {
@@ -75,26 +78,21 @@ const fetchImageToBase64 = async (url) => {
   }
 };
 
-const fetchLevelIcon = async (level) => {
-  if (level < 0 || level > 6) return '';
-
-  try {
-    const levelSuffix = level === 6 ? '_Lightning' : '';
-    const url = `https://cdn.jsdelivr.net/gh/lsqkk/bili-card/assets/LV${level}${levelSuffix}.svg`;
-
-    const { buffer } = await fetchBuffer(url, { timeout: 5000 });
-    const base64 = buffer.toString('base64');
-    return `data:image/svg+xml;base64,${base64}`;
-  } catch (error) {
-    console.warn(`Failed to fetch level icon for level ${level}`, error.message);
-    return '';
-  }
-};
-
 module.exports = async (req, res) => {
   const { uid, theme = 'default', color = 'white' } = req.query;
   if (!uid || !/^\d+$/.test(uid)) {
     return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID', 400);
+  }
+
+  // 限流：同一 IP 每分钟最多 30 次
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['x-real-ip']
+    || req.connection?.remoteAddress
+    || 'unknown';
+  const limit = rateLimit(ip);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', limit.retryAfter);
+    return sendErrorSVG(res, 'RATE_LIMIT', `请求过于频繁，请 ${limit.retryAfter} 秒后重试`, 429);
   }
 
   try {
@@ -108,6 +106,7 @@ module.exports = async (req, res) => {
     let colorScheme;
     try {
       colorScheme = require(`../lib/colors/${color}`);
+      validatePalette(colorScheme.palette);
     } catch (err) {
       colorScheme = require('../lib/colors/white');
     }
@@ -126,8 +125,10 @@ module.exports = async (req, res) => {
     ]);
 
     const cardData = cardRes.status === 'fulfilled' ? cardRes.value : {};
-    const videoData = videoRes.status === 'fulfilled' ? videoRes.value?.videos?.[0] : null;
+    const videoOk = videoRes.status === 'fulfilled';
+    const videoData = videoOk ? videoRes.value?.videos?.[0] : null;
 
+    const images = { face: '', videoCover: '', levelIcon: '' };
     const imagePromises = [];
 
     const faceUrl = cardData.data?.card?.face;
@@ -143,13 +144,9 @@ module.exports = async (req, res) => {
     }
 
     const level = cardData.data?.card?.level_info?.current_level || 0;
-    if (level >= 0 && level <= 6) {
-      imagePromises.push(fetchLevelIcon(level).then(base64 => ({ type: 'levelIcon', base64 })));
-    }
+    images.levelIcon = getLevelIcon(level);
 
     const imageResults = await Promise.allSettled(imagePromises);
-
-    const images = { face: '', videoCover: '', levelIcon: '' };
     imageResults.forEach(result => {
       if (result.status === 'fulfilled') {
         images[result.value.type] = result.value.base64;
@@ -168,7 +165,7 @@ module.exports = async (req, res) => {
         title: esc(videoData.title),
         play: videoData.play_count || 0,
         cover: images.videoCover || '',
-      } : null,
+      } : videoOk ? null : { error: true },
       levelIcon: images.levelIcon
     };
 

@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git *)",
+      "Bash(node --test test/*.test.js)"
     ]
   }
 }
