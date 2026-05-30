@@ -1,5 +1,6 @@
 // api/index.js - 主题和颜色信息查询API
 const themesConfig = require('../lib/config/themes-colors.json');
+const logger = require('../lib/utils/logger');
 
 module.exports = async (req, res) => {
     const { action = 'list', type } = req.query;
@@ -115,7 +116,7 @@ module.exports = async (req, res) => {
                 });
         }
     } catch (error) {
-        console.error('Index API error:', error);
+        logger.error('Index API error', { error: error.message, action: req.query?.action });
         res.status(500).json({
             success: false,
             error: 'Internal server error',

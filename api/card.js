@@ -4,6 +4,7 @@ const { imageCache, esc } = require('../lib/utils/common');
 const { validatePalette } = require('../lib/utils/styleGenerator');
 const { getLevelIcon } = require('../lib/level-icons');
 const { rateLimit } = require('../lib/rate-limit');
+const logger = require('../lib/utils/logger');
 const COMMENTS = require('../lib/utils/comments');
 
 const CONFIG = {
@@ -12,7 +13,33 @@ const CONFIG = {
   USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 };
 
-const proxyImageUrl = (url) => {
+// 模块加载时预校验所有主题和配色，防止运行时才发现语法错误
+const THEME_IDS = ['default', 'modern', 'btv', 'simple'];
+const COLOR_IDS = ['white', 'blue', 'pink', 'green', 'purple', 'dark'];
+
+for (const id of THEME_IDS) {
+  try {
+    const mod = require(`../lib/themes/${id}`);
+    if (typeof mod.generateSVG !== 'function') {
+      logger.warn(`Theme "${id}" missing generateSVG export`);
+    }
+  } catch (err) {
+    logger.error(`Theme "${id}" failed to load`, { error: err.message });
+  }
+}
+
+for (const id of COLOR_IDS) {
+  try {
+    const mod = require(`../lib/colors/${id}`);
+    if (!mod.palette || typeof mod.palette !== 'object') {
+      logger.warn(`Color "${id}" missing palette export`);
+    }
+  } catch (err) {
+    logger.error(`Color "${id}" failed to load`, { error: err.message });
+  }
+}
+
+const proxyImageUrl = (url, options = {}) => {
   if (!url) return '';
 
   // 允许通过环境变量禁用图片代理
@@ -27,7 +54,9 @@ const proxyImageUrl = (url) => {
 
   if (url.includes('hdslb.com') || url.includes('bilivideo.com') || url.includes('bilibili.com')) {
     const encodedUrl = encodeURIComponent(url);
-    return `https://images.weserv.nl/?url=${encodedUrl}&w=400&h=225&output=webp&q=80`;
+    // animated=true 时跳过 WebP 转换，保留原始格式（用于 GIF 动图）
+    const output = options.animated ? '' : '&output=webp&q=80';
+    return `https://images.weserv.nl/?url=${encodedUrl}&w=400&h=225${output}`;
   }
 
   return url;
@@ -47,10 +76,10 @@ const fetchBuffer = async (url, options = {}) => {
   return { contentType, buffer };
 };
 
-const fetchImageToBase64 = async (url) => {
+const fetchImageToBase64 = async (url, options = {}) => {
   if (!url || !url.startsWith('http')) return '';
 
-  const proxiedUrl = proxyImageUrl(url);
+  const proxiedUrl = proxyImageUrl(url, options);
 
   const cacheKey = url;
   const cacheEntry = imageCache.get(cacheKey);
@@ -66,7 +95,7 @@ const fetchImageToBase64 = async (url) => {
     imageCache.set(cacheKey, { base64: dataUrl, timestamp: Date.now() });
     return dataUrl;
   } catch (error) {
-    console.warn(`Failed to fetch image: ${url} (proxied: ${proxiedUrl})`, error.message);
+    logger.warn('Image proxy fetch failed, falling back to direct', { url, proxy: proxiedUrl, error: error.message });
 
     if (proxiedUrl !== url) {
       try {
@@ -80,7 +109,7 @@ const fetchImageToBase64 = async (url) => {
         imageCache.set(cacheKey, { base64: dataUrl, timestamp: Date.now() });
         return dataUrl;
       } catch (fallbackError) {
-        console.warn(`Fallback also failed for image: ${url}`, fallbackError.message);
+        logger.warn('Direct image fetch also failed', { url, error: fallbackError.message });
       }
     }
 
@@ -89,7 +118,8 @@ const fetchImageToBase64 = async (url) => {
 };
 
 module.exports = async (req, res) => {
-  const { uid, theme = 'default', color = 'white' } = req.query;
+  const { uid, theme = 'default', color = 'white', animated } = req.query;
+  const imgOptions = { animated: animated === 'true' };
   if (!uid || !/^\d+$/.test(uid)) {
     return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID', 400);
   }
@@ -143,13 +173,13 @@ module.exports = async (req, res) => {
 
     const faceUrl = cardData.data?.card?.face;
     if (faceUrl) {
-      imagePromises.push(fetchImageToBase64(faceUrl).then(base64 => ({ type: 'face', base64 })));
+      imagePromises.push(fetchImageToBase64(faceUrl, imgOptions).then(base64 => ({ type: 'face', base64 })));
     }
 
     if (videoData) {
       const coverUrl = videoData.cover || videoData.pic;
       if (coverUrl) {
-        imagePromises.push(fetchImageToBase64(coverUrl).then(base64 => ({ type: 'videoCover', base64 })));
+        imagePromises.push(fetchImageToBase64(coverUrl, imgOptions).then(base64 => ({ type: 'videoCover', base64 })));
       }
     }
 
@@ -187,7 +217,7 @@ ${svgContent}`;
     res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
     res.send(svg);
   } catch (err) {
-    console.error('Card generation error:', err);
+    logger.error('Card generation failed', { error: err.message, uid: req.query?.uid, theme: req.query?.theme });
     sendErrorSVG(res, 'FETCH_ERROR', 'API Request Failed', 502);
   }
 };

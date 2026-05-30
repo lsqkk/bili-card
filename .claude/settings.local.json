@@ -10,7 +10,12 @@
       "Bash(pkill -f \"node dev-server\")",
       "Bash(npx kill-port *)",
       "Bash(curl -s http://localhost:3000/api/card?uid=2105459088\\\\&theme=default)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(node --check api/card.js)",
+      "Bash(node --check api/index.js)",
+      "Bash(node --check api/health.js)",
+      "Bash(node --check api/data.js)",
+      "Bash(node --check lib/utils/logger.js)"
     ]
   }
 }
