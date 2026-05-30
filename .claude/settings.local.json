@@ -9,7 +9,8 @@
       "Bash(curl -s http://localhost:3000)",
       "Bash(pkill -f \"node dev-server\")",
       "Bash(npx kill-port *)",
-      "Bash(curl -s http://localhost:3000/api/card?uid=2105459088\\\\&theme=default)"
+      "Bash(curl -s http://localhost:3000/api/card?uid=2105459088\\\\&theme=default)",
+      "Bash(npm test *)"
     ]
   }
 }

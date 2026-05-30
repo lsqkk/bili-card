@@ -15,6 +15,16 @@ const CONFIG = {
 const proxyImageUrl = (url) => {
   if (!url) return '';
 
+  // 允许通过环境变量禁用图片代理
+  if (process.env.IMAGE_PROXY_DISABLED === 'true' || process.env.IMAGE_PROXY_DISABLED === '1') {
+    return url;
+  }
+
+  // 允许自定义图片代理 URL，使用 {url} 作为占位符
+  if (process.env.IMAGE_PROXY_URL && (url.includes('hdslb.com') || url.includes('bilivideo.com') || url.includes('bilibili.com'))) {
+    return process.env.IMAGE_PROXY_URL.replace('{url}', encodeURIComponent(url));
+  }
+
   if (url.includes('hdslb.com') || url.includes('bilivideo.com') || url.includes('bilibili.com')) {
     const encodedUrl = encodeURIComponent(url);
     return `https://images.weserv.nl/?url=${encodedUrl}&w=400&h=225&output=webp&q=80`;
@@ -44,7 +54,7 @@ const fetchImageToBase64 = async (url) => {
 
   const cacheKey = url;
   const cacheEntry = imageCache.get(cacheKey);
-  if (cacheEntry && Date.now() - cacheEntry.timestamp < 30 * 60 * 1000) {
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 60 * 60 * 1000) {
     return cacheEntry.base64;
   }
 

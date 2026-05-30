@@ -30,7 +30,8 @@
                     "pink",
                     "green",
                     "purple",
-                    "dark"
+                    "dark",
+                    "white"
                 ]
             }
         },
@@ -45,8 +46,8 @@
                 "扁平化设计"
             ],
             "dimensions": {
-                "width": 540,
-                "height": 220
+                "width": 885,
+                "height": 535
             },
             "example": {
                 "with_uid": "/api/card?uid=2105459088&theme=modern&color=green",
@@ -58,7 +59,8 @@
                     "pink",
                     "green",
                     "purple",
-                    "dark"
+                    "dark",
+                    "white"
                 ]
             }
         },
@@ -73,8 +75,8 @@
                 "扁平化设计"
             ],
             "dimensions": {
-                "width": 540,
-                "height": 220
+                "width": 813,
+                "height": 709
             },
             "example": {
                 "with_uid": "/api/card?uid=2105459088&theme=btv&color=pink",
@@ -101,8 +103,8 @@
                 "扁平化设计"
             ],
             "dimensions": {
-                "width": 540,
-                "height": 220
+                "width": 587,
+                "height": 311
             },
             "example": {
                 "with_uid": "/api/card?uid=2105459088&theme=simple&color=dark",
@@ -114,7 +116,8 @@
                     "pink",
                     "green",
                     "purple",
-                    "dark"
+                    "dark",
+                    "white"
                 ]
             }
         }
@@ -191,6 +194,20 @@
                 "usage": 15,
                 "popularity": "medium"
             }
+        },
+        {
+            "id": "white",
+            "name": "纯净白",
+            "description": "纯白配色方案，简洁干净",
+            "type": "light",
+            "preview_images": {
+                "example": "/api/card?uid=2105459088&theme=default&color=white",
+                "color_palette": "https://via.placeholder.com/300x100/FFFFFF/142541?text=纯净白"
+            },
+            "stats": {
+                "usage": 5,
+                "popularity": "low"
+            }
         }
     ],
     "examples": {
@@ -202,7 +219,8 @@
                 "default_pink": "/api/card?uid=2105459088&theme=default&color=pink",
                 "default_green": "/api/card?uid=2105459088&theme=default&color=green",
                 "default_purple": "/api/card?uid=2105459088&theme=default&color=purple",
-                "default_dark": "/api/card?uid=2105459088&theme=default&color=dark"
+                "default_dark": "/api/card?uid=2105459088&theme=default&color=dark",
+                "default_white": "/api/card?uid=2105459088&theme=default&color=white"
             }
         },
         "popular_uids": [
