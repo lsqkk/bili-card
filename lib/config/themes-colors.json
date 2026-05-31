@@ -248,7 +248,10 @@
             "uid": "B站用户UID（必填）",
             "theme": "主题ID（可选，默认：default）",
             "color": "颜色ID（可选，默认：blue）",
-            "cache": "客户端缓存时间（秒，可选）"
+            "cache": "客户端缓存时间（秒，可选）",
+            "width": "输出宽度（可选，等比缩放，默认原始尺寸）",
+            "hideVideo": "隐藏视频区域（可选，true/false，默认false）",
+            "animated": "保留动画格式（可选，true/false，默认false）"
         }
     },
     "endpoints": {

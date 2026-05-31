@@ -118,8 +118,9 @@ const fetchImageToBase64 = async (url, options = {}) => {
 };
 
 module.exports = async (req, res) => {
-  const { uid, theme = 'default', color = 'white', animated } = req.query;
+  const { uid, theme = 'default', color = 'white', animated, width: widthParam, hideVideo } = req.query;
   const imgOptions = { animated: animated === 'true' };
+  const outputWidth = parseInt(widthParam) || 0;
   if (!uid || !/^\d+$/.test(uid)) {
     return sendErrorSVG(res, 'ID_ERROR', 'Invalid UID', 400);
   }
@@ -209,7 +210,92 @@ module.exports = async (req, res) => {
       levelIcon: images.levelIcon
     };
 
-    const svgContent = themeModule.generateSVG(data, colorScheme.palette);
+    // hideVideo 参数：清空视频数据，主题自动隐藏视频区域
+    if (hideVideo === 'true') {
+      data.video = null;
+    }
+
+    let svgContent = themeModule.generateSVG(data, colorScheme.palette);
+
+    // 数字计数 + 上飘动画：将 stat 类数字替换为 20 层从 0 递增的 CSS 动画
+    // 注入计数关键帧（每个 stat 分组只需注入一次）
+    svgContent = svgContent.replace('</defs>', `</defs>
+        <style>
+        @keyframes cntOn {
+            0% { opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes cntFin {
+            0% { opacity: 0; }
+            5% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        </style>`);
+
+    svgContent = svgContent.replace(
+      /<text class="stat"([^>]*)>([\d.]+万?)<\/text>/g,
+      (match, attrs, textContent) => {
+        const numMatch = textContent.match(/^([\d.]+)(.*)$/);
+        if (!numMatch) return match;
+        const target = parseFloat(numMatch[1]);
+        const suffix = numMatch[2] || '';
+
+        // 从 attrs 中提取原始 transform 位置，用于 animateTransform
+        const transMatch = attrs.match(/matrix\(1 0 0 1 ([\d.]+) ([\d.]+)\)/);
+        let wrapperAttrs = attrs;
+        let slideAnimate = '';
+        if (transMatch) {
+          const origX = transMatch[1];
+          const origY = parseFloat(transMatch[2]);
+          wrapperAttrs = ` transform="translate(${origX}, ${origY})"`;
+          slideAnimate = `<animateTransform attributeName="transform" type="translate" from="${origX} ${origY + 14}" to="${origX} ${origY}" dur="0.5s" fill="freeze" begin="0.2s"/>`;
+        }
+
+        const STEPS = 20; // 每 10ms 跳一个数，2 秒跑完
+        let result = `<g${wrapperAttrs}>${slideAnimate}`;
+        for (let i = 0; i < STEPS; i++) {
+          const display = Math.round(target * (i + 1) / STEPS);
+          const isLast = i === STEPS - 1;
+          const begin = (0.25 + i * 0.1).toFixed(3);
+          const kf = isLast ? 'cntFin' : 'cntOn';
+          result += `<text class="stat" style="animation: ${kf} 0.1s ${begin}s both">${display}${suffix}</text>`;
+        }
+        result += '</g>';
+        return result;
+      }
+    );
+
+    // 非数字文字上飘动画：用 SVG 原生 animateTransform 避免 CSS 冲突
+    const slideBeginMap = { title: '0.05s', label: '0.15s', signature: '0.25s', 'video-title': '0.3s', 'video-label': '0.3s' };
+    const slideClasses = Object.keys(slideBeginMap).join('|');
+    svgContent = svgContent.replace(
+      new RegExp(`<text class="(${slideClasses})" transform="matrix\\(1 0 0 1 ([\\d.]+) ([\\d.]+)\\)">([^<]*)<\\/text>`, 'g'),
+      (match, className, origX, origY, content) => {
+        const begin = slideBeginMap[className];
+        return `<g transform="translate(${origX}, ${parseFloat(origY) + 12})">
+          <animateTransform attributeName="transform" type="translate" from="${origX} ${parseFloat(origY) + 12}" to="${origX} ${origY}" dur="0.5s" fill="freeze" begin="${begin}"/>
+          <text class="${className}">${content}</text>
+        </g>`;
+      }
+    );
+
+    // width 参数：等比缩放 SVG 输出宽度
+    if (outputWidth > 0) {
+      svgContent = svgContent.replace(
+        /<svg([^>]*)width="(\d+)"([^>]*)height="(\d+)"([^>]*)viewBox="([^"]+)"/,
+        (match, before, oldW, mid, oldH, after, viewBox) => {
+          const parts = viewBox.split(/[ ,]+/).map(Number);
+          if (parts.length === 4 && parts[2] > 0) {
+            const ratio = outputWidth / parts[2];
+            const newHeight = Math.round(parts[3] * ratio);
+            return `<svg${before}width="${outputWidth}"${mid}height="${newHeight}"${after}viewBox="${viewBox}"`;
+          }
+          return match;
+        }
+      );
+    }
 
     const svg = `${COMMENTS.banner}
 ${svgContent}`;
