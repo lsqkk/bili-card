@@ -1,14 +1,14 @@
 {
-    "name": "bili-card",
-    "version": "1.0.0",
-    "description": "B站用户信息SVG卡片生成器",
-    "scripts": {
-        "dev": "node dev-server.js",
-        "dev:vercel": "vercel dev",
-        "test": "node --test test/*.test.js",
-        "deploy": "vercel --prod"
-    },
-    "engines": {
-        "node": "20.x"
-    }
+  "name": "bili-card",
+  "version": "2.0.0",
+  "description": "B 站创作者 SVG 卡片生成器",
+  "scripts": {
+    "dev": "node --watch dev-server.js",
+    "dev:vercel": "vercel dev",
+    "test": "node --test",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": "22.x"
+  }
 }

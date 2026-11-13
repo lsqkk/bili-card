@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用 B 站 UID 生成可嵌入 README、博客和个人主页的 SVG 卡片。">
+  <title>Bili Card · B 站卡片生成器</title>
+  <link rel="stylesheet" href="/studio.css">
+  <script src="/studio.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap masthead-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">b</span> Bili Card</a>
+      <nav aria-label="项目"><a href="/api?action=list">API 目录</a><a href="https://github.com/lsqkk/bili-card">GitHub ↗</a></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="intro">
+      <h1>B 站卡片生成器</h1>
+      <p>把你的 B 站主页嵌入 README、博客或作品集。</p>
+    </div>
+    <div class="workspace">
+      <form id="controls" class="settings">
+        <label for="uid">B 站 UID</label>
+        <div class="uid-row">
+          <input id="uid" name="uid" inputmode="numeric" pattern="[0-9]{1,16}" maxlength="16" placeholder="输入 UID" required>
+          <button class="primary" type="submit">预览</button>
+        </div>
+        <button class="quiet" id="use-demo" type="button">使用示例资料</button>
+        <fieldset>
+          <legend>布局</legend>
+          <div class="theme-grid" id="themes"></div>
+        </fieldset>
+        <fieldset>
+          <legend>配色 <span id="color-name"></span></legend>
+          <div class="swatches" id="colors"></div>
+        </fieldset>
+        <details>
+          <summary>更多选项</summary>
+          <div class="advanced">
+            <label>输出宽度（px）<input name="width" type="number" min="160" max="2400" placeholder="原始尺寸"></label>
+            <label>标签语言<select name="lang"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label>
+            <label>数字格式<select name="number"><option value="compact">简写</option><option value="full">完整</option></select></label>
+            <label>视频<select name="video"><option value="latest">最新发布</option><option value="popular">播放最多</option></select></label>
+            <label class="check"><input name="transparent" type="checkbox">透明外框</label>
+            <label class="check"><input name="motion" type="checkbox">入场动画</label>
+            <fieldset class="hide-fields"><legend>隐藏模块</legend><div id="fields"></div></fieldset>
+          </div>
+        </details>
+      </form>
+
+      <section class="preview" aria-labelledby="preview-heading">
+        <div class="preview-header"><h2 id="preview-heading">卡片预览</h2><span id="source">示例资料</span></div>
+        <div class="stage">
+          <img id="card" alt="B 站创作者卡片预览" src="/api/card?demo=true&amp;theme=modern&amp;color=cobalt">
+          <p id="status" role="status"></p>
+        </div>
+        <div class="exports">
+          <label for="embed">嵌入代码</label>
+          <select id="format" aria-label="嵌入格式"><option>Markdown</option><option>HTML</option><option>URL</option></select>
+          <textarea id="embed" rows="2" readonly spellcheck="false"></textarea>
+          <div class="export-actions">
+            <button id="copy" class="primary" type="button">复制代码</button>
+            <a id="open" href="/api/card?demo=true" target="_blank" rel="noopener">打开 SVG ↗</a>
+            <span id="copy-status" role="status"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

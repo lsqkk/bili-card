@@ -1,187 +1,77 @@
-# Bili Card - 一行代码返回B站展示SVG卡片
+# Bili Card
 
-一款优雅、现代的B站用户卡片生成工具，通过简洁的API接口将B站用户信息转化为精美的SVG卡片。无需复杂的配置，只需一个UID，即可获得美观、可自定义的用户信息展示卡片，完美嵌入个人网站、GitHub Profile或任何需要展示B站身份的场景。
+用一个 B 站 UID 生成 SVG 名片，嵌入 GitHub README、博客或作品集。
 
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
-[![API Status](https://img.shields.io/badge/API-Live-success)](https://bili-card.130923.xyz/api/card?uid=2105459088)
+[打开卡片生成器](https://bili-card.130923.xyz/) · [API 目录](https://bili-card.130923.xyz/api?action=list) · [反馈问题](https://github.com/lsqkk/bili-card/issues)
 
-## ✨ 即刻体验
+![Bili Card 聚焦主题与钴蓝配色](assets/demo.svg)
 
-![Bilibili用户卡片示例](/assets/demo.svg)
+## 快速开始
 
-## 🚀 快速开始
-
-### 基本使用
-
-获取指定B站用户的卡片，只需在URL中传入用户的UID：
+在 B 站个人空间 URL 中找到 UID，例如 `https://space.bilibili.com/2105459088`。在生成器中预览并复制 Markdown、HTML 或图片地址，也可以直接修改下面的链接。
 
 ```md
-![蓝色奇夸克的B站卡片](https://bili-card.130923.xyz/api/card?uid=2105459088)
+[![我的 B 站卡片](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=cobalt&width=620)](https://space.bilibili.com/2105459088)
 ```
 
-### 自定义主题和颜色
+## 布局和配色
 
-我们提供多种卡片主题和配色，让你的卡片更有个性：
+| 主题 | 使用场景 | 示例 |
+| --- | --- | --- |
+| `default` 经典 | 横向资料和视频 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=default&color=blue) |
+| `modern` 聚焦 | 作品集，大封面突出最新作品 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=modern&color=cobalt) |
+| `btv` 小电视 | 个人空间、社区主页 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=btv&color=pink) |
+| `simple` 极简 | README、作者信息 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=simple&color=green) |
+| `poster` 海报 | 竖向作品推荐，无作品时自动收起封面区 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=poster&color=sand) |
+| `banner` 横幅 | 窄栏或页眉 | [示例](https://bili-card.130923.xyz/api/card?demo=true&theme=banner&color=teal) |
 
+浅色支持 `white`、`blue`、`pink`、`green`、`purple`、`sand`，深色支持 `dark`、`cobalt`、`teal`。选择 `auto` 后，支持配色媒体查询的宿主会根据系统偏好切换。
 
-| 👉配色<br>👇主题 | 极简白 (`white`) | B站蓝 (`blue`) | 樱花粉 (`pink`) | 清新绿 (`green`) | 优雅紫 (`purple`) | 深邃黑 (`dark`) |
-|-----------|----------------|----------------|-----------------|------------------|-------------------|-----------------|
-| **默认 (`default`)** | ![default-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=white) | ![default-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=blue) | ![default-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=pink) | ![default-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=green) | ![default-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=purple) | ![default-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=dark) |
-| **现代 (`modern`)** | ![modern-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=white) | ![modern-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=blue) | ![modern-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=pink) | ![modern-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=green) | ![modern-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=purple) | ![modern-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=modern&color=dark) |
-| **B站小电视 (`btv`)** | ![btv-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=white) | ![btv-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=blue) | ![btv-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=pink) | ![btv-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=green) | ![btv-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=purple) | ![btv-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=btv&color=dark) |
-| **极简 (`simple`)** | ![simple-white](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=white) |![simple-blue](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=blue) | ![simple-pink](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=pink) | ![simple-green](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=green) | ![simple-purple](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=purple) | ![simple-dark](https://bili-card.130923.xyz/api/card?uid=2105459088&theme=simple&color=dark) |
+## API
 
-**参数说明：**
-- `uid`: B站用户ID（示例使用：2105459088）
-- `theme`: 主题（default/modern/btv/simple）
-- `color`: 配色（blue/pink/green/purple/dark）
+### `GET /api/card`
 
+返回 `image/svg+xml`。参数均通过查询字符串传入。
 
-## 📋 API文档
+| 参数 | 取值和默认行为 |
+| --- | --- |
+| `uid` | B 站正整数 UID。开启示例模式时可省略 |
+| `theme` | 主题 ID，默认 `default` |
+| `color` | 配色 ID，默认 `white` |
+| `width` | 按比例调整输出尺寸，支持 160–2400 px，省略时使用主题原始尺寸 |
+| `hide` | 逗号分隔的模块 ID，支持 `avatar,sign,uid,level,follower,following,like,video` |
+| `hideVideo` | `true` 隐藏视频，兼容旧链接 |
+| `video` | `latest` 按发布时间（默认），或 `popular` 按播放数 |
+| `lang` | `zh-CN`（默认）或 `en`，控制卡片标签和数字单位 |
+| `number` | `compact` 简写（默认），或 `full` 完整数值 |
+| `bg` | `solid`（默认），或 `transparent` 去掉外底板。小电视保留机身轮廓 |
+| `accent` | 自定义强调色，填写六位十六进制值，例如 `3B66D9` |
+| `motion` | `true` 开启入场动画，遵循减少动态效果偏好 |
+| `animated` | `true` 时尝试保留上游 GIF 动画，受 SVG 宿主支持影响 |
+| `cache` | 浏览器与 CDN 缓存秒数，0–3600，默认 3600。0 禁用 HTTP 响应缓存 |
+| `demo` | `true` 使用内置虚构资料，无需访问上游 |
 
-### 卡片生成接口
+`simple` 和 `banner` 只展示个人资料。未知主题或配色回退到默认值。UID 无效、用户不存在、请求过多或资料暂时不可用时，返回相应的 400、404、429 或 502 和一张错误 SVG。
 
-**端点**：`GET /api/card`
+### 其他端点
 
-**参数**：
+- `GET /api?action=list` 返回主题、色板、可隐藏模块和参数说明。可加 `type=themes` 或 `type=colors`。另支持 `action=details&id=poster` 和 `action=preview&theme=poster&color=teal`。
+- `GET /api/data?uid=2105459088` 返回同一资料源的 JSON。支持 `hideVideo=true` 和 `video=popular`。资料降级时响应包含 `partial: true`，原有数值字段以 0 补齐。
+- `GET /api/health` 返回实例状态。
 
-| 参数名 | 类型 | 必填 | 默认值 | 说明 |
-|--------|------|------|---------|------|
-| `uid` | string | 是 | - | B站用户UID |
-| `theme` | string | 否 | `default` | 主题样式 |
-| `color` | string | 否 | `white` | 配色方案 |
+头像、封面以数据 URI 内嵌，可直接通过 `<img>` 或 Markdown 使用。投稿接口异常时仍可显示用户资料，短缓存后重试。
 
-**示例请求**：
+## 本地开发与部署
+
+使用 Node.js 22，项目无第三方运行时依赖。
 
 ```bash
-curl "https://bili-card.130923.xyz/api/card?uid=2105459088&theme=default&color=blue"
+npm run dev
+npm test
 ```
 
-**响应**：
-- Content-Type: `image/svg+xml`
-- Cache-Control: `public, max-age=3600`
+打开 `http://localhost:3000/`。在 Vercel 导入仓库后使用 Other 框架预设，`vercel.json` 声明静态目录和 API 路由。可用 `npm run dev:vercel` 在本地运行 Vercel CLI，或用 `npm run deploy` 部署已关联的项目。
 
-### 主题信息查询接口
+图片默认通过 weserv 处理，可用 `IMAGE_PROXY_DISABLED=true` 直连 B 站图片 CDN，或设置含 `{url}` 的 `IMAGE_PROXY_URL`。资料优先使用 B 站公开资料接口，备用资料与投稿来自 [UAPI](https://uapis.cn/docs/api-reference/get-social-bilibili-archives)。
 
-**端点**：`GET /api/`
-
-**参数**：
-
-| 参数名 | 类型 | 必填 | 默认值 | 说明 |
-|--------|------|------|---------|------|
-| `action` | string | 否 | `list` | 操作类型：`list`, `preview`, `details` |
-| `type` | string | 否 | - | 类型：`themes`, `colors` |
-| `id` | string | 否 | - | 项目ID（用于`details`操作） |
-
-**操作示例**：
-
-1. 查看所有可用主题和颜色：
-   ```
-   GET /api/?action=list
-   ```
-
-2. 预览特定主题+颜色组合：
-   ```
-   GET /api/?action=preview&theme=default&color=blue
-   ```
-
-3. 获取详细信息：
-   ```
-   GET /api/?action=details&id=default
-   ```
-
-## 🎨 主题系统
-
-我们的卡片系统采用模块化设计，将**视觉样式**与**色彩方案**分离：
-
-- **主题 (Themes)**：定义卡片的布局、结构和视觉元素
-- **颜色方案 (Colors)**：提供完整的配色调色板
-
-目前支持：
-- **4种主题主题**：经典风格、现代感、B站小电视、极简卡片
-- **6种配色方案**：极简白、B站蓝、樱花粉、清新绿、优雅紫、深邃黑
-
-## 🔧 技术特性
-
-### 智能数据处理
-- 自动获取用户基本信息、粉丝数、获赞数和最新视频
-- 签名和视频标题智能换行，确保内容美观
-- 数字格式化（如"1.2万"）
-
-### 性能优化
-- SVG响应，体积小加载快
-- 内置缓存机制，减少API调用
-- 异步并行请求，提升生成速度
-
-### 安全防护
-- UID格式验证
-- 内容HTML转义，防止XSS攻击
-- 图片代理，避免跨域问题
-
-## 📊 成功案例
-
-这里有一些使用我们卡片生成服务的用户示例：
-
-| 用户 | 卡片展示 |
-|------|----------|
-| 老番茄 | ![老番茄卡片](https://bili-card.130923.xyz/api/card?uid=546195&color=green) |
-| 嘉然今天吃什么 | ![嘉然卡片](https://bili-card.130923.xyz/api/card?uid=672328094&color=pink) |
-| 陈睿 | ![陈睿卡片](https://bili-card.130923.xyz/api/card?uid=208259&color=dark) |
-
-## 🔗 使用场景
-
-### 个人网站
-在个人简历或作品集中展示B站身份：
-```html
-<img src="https://bili-card.130923.xyz/api/card?uid=你的UID" 
-     alt="Bilibili卡片" 
-     width="540" 
-     height="220">
-```
-
-### GitHub Profile
-在GitHub个人主页展示B站信息：
-```markdown
-![我的B站卡片](https://bili-card.130923.xyz/api/card?uid=你的UID)
-```
-
-### 技术博客
-在技术文章作者信息处使用：
-```html
-<div class="author-card">
-  <h3>关于作者</h3>
-  <img src="https://bili-card.130923.xyz/api/card?uid=你的UID" 
-       alt="作者B站卡片">
-</div>
-```
-
-## 🤝 贡献与支持
-
-### 问题反馈
-如果您发现任何问题或有改进建议，请通过 [GitHub Issues](https://github.com/lsqkk/bili-card/issues) 提交。
-
-### 开发贡献
-我们欢迎社区贡献，特别是：
-- 新的主题样式
-- 更多的配色方案
-- 性能优化
-- 文档改进
-
-### 寻找你的UID
-不知道自己的B站UID？访问你的B站个人主页，URL中的数字就是你的UID：
-```
-https://space.bilibili.com/12345678
-                              ↑
-                             UID
-```
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
----
-
-**立即开始** → `https://bili-card.130923.xyz/api/card?uid=你的UID`
-
-希望这张小小的卡片能为你的线上身份增添一抹独特的色彩。如果你喜欢这个项目，别忘了给我们一个⭐️！
+[贡献指南](CONTRIBUTING.md) · [MIT 许可证](LICENSE)

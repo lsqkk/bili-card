@@ -1,66 +1,29 @@
-// api/data.js - JSON 数据 API，返回 B 站用户数据
 const logger = require('../lib/utils/logger');
-
-const CONFIG = {
-  CACHE_TTL: 3600,
-  TIMEOUT: 15000,
-  USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-};
+const { validUid } = require('../lib/card-options');
+const { getUser } = require('../lib/bilibili');
+const { limitRequest, prepare, setCache } = require('../lib/http');
 
 module.exports = async (req, res) => {
-  const { uid } = req.query;
-  if (!uid || !/^\d+$/.test(uid)) {
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(400).json({ success: false, error: 'Invalid UID' });
-  }
+  const error = (status, message) => res.status(status).json({ success: false, error: message });
+  if (!prepare(req, res, error)) return;
+  const { uid, hideVideo, video } = req.query || {};
+  if (!validUid(uid)) return error(400, 'Invalid UID');
+  if (!limitRequest(req, res)) return error(429, 'Too many requests');
 
   try {
-    const [cardRes, videoRes] = await Promise.allSettled([
-      fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
-        signal: AbortSignal.timeout(CONFIG.TIMEOUT),
-        headers: {
-          'User-Agent': CONFIG.USER_AGENT,
-          'Referer': 'https://www.bilibili.com/'
-        }
-      }).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))),
-      fetch(`https://uapis.cn/api/v1/social/bilibili/archives?mid=${uid}&ps=1`, {
-        signal: AbortSignal.timeout(CONFIG.TIMEOUT)
-      }).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-    ]);
-
-    const cardData = cardRes.status === 'fulfilled' ? cardRes.value : null;
-    const videoOk = videoRes.status === 'fulfilled';
-    const videoData = videoOk ? videoRes.value?.videos?.[0] : null;
-
-    if (!cardData?.data?.card) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(404).json({ success: false, error: 'User not found' });
+    const order = hideVideo === 'true' ? null : video === 'popular' ? 'views' : 'pubdate';
+    const result = await getUser(uid, order);
+    const data = { ...result.data };
+    // Keep the original numeric JSON fields for existing clients.
+    for (const key of ['level', 'follower', 'following', 'like']) data[key] ??= 0;
+    if (data.video) {
+      for (const key of ['play', 'danmaku', 'created']) data.video[key] ??= 0;
     }
-
-    const data = {
-      uid: parseInt(uid),
-      name: cardData.data.card.name || 'Unknown',
-      face: cardData.data.card.face || '',
-      level: cardData.data.card.level_info?.current_level || 0,
-      sign: cardData.data.card.sign || '',
-      follower: cardData.data.follower || 0,
-      following: cardData.data.card.attention || 0,
-      like: cardData.data.like_num || 0,
-      video: videoData ? {
-        title: videoData.title,
-        cover: videoData.cover || videoData.pic || '',
-        play: videoData.play_count || 0,
-        danmaku: videoData.danmaku_count || 0,
-        created: videoData.created || 0,
-      } : null,
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', `public, max-age=${CONFIG.CACHE_TTL}`);
-    res.json({ success: true, data });
-  } catch (err) {
-    logger.error('Data API error', { error: err.message, uid });
-    res.setHeader('Content-Type', 'application/json');
-    res.status(502).json({ success: false, error: 'API Request Failed' });
+    setCache(res, 3600, result.partial);
+    res.json({ success: true, data, ...(result.partial && { partial: true }) });
+  } catch (cause) {
+    if (cause.status === 404) return error(404, 'User not found');
+    logger.warn('Data request failed', { uid, error: cause.message });
+    return error(502, 'API Request Failed');
   }
 };

@@ -1,10 +1,7 @@
-// api/health.js - 健康检查端点
+const { prepare } = require('../lib/http');
+
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.status(200).json({
-    status: 'ok',
-    timestamp: Date.now(),
-    uptime: process.uptime(),
-  });
+  const error = (status, message) => res.status(status).json({ status: 'error', error: message });
+  if (!prepare(req, res, error)) return;
+  res.json({ status: 'ok', timestamp: Date.now(), uptime: process.uptime() });
 };
