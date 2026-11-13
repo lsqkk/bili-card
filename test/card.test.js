@@ -6,6 +6,7 @@ const catalog = require('../api/index');
 const { parseOptions, themes, colors } = require('../lib/card-options');
 const { renderCard } = require('../lib/card-svg');
 const { fit } = require('../lib/svg-text');
+const { getLevelIcon } = require('../lib/level-icons');
 const demo = require('../lib/demo');
 
 async function request(handler, query, method = 'GET') {
@@ -44,7 +45,38 @@ test('optional fields, language, width, motion and transparent canvas compose', 
   assert.match(result.body, /prefers-color-scheme:dark/);
   assert.match(result.body, /prefers-reduced-motion:no-preference/);
   assert.match(result.body, /#2b7fc3/);
-  assert.doesNotMatch(result.body, /<image|LATEST VIDEO|UID 10000001|LV6|带上相机|>following<|fill="url\(#card-bg\)"/);
+  assert.doesNotMatch(result.body, /<image|LATEST VIDEO|UID 10000001|LV6|带上相机|>following<|class="paper outline"/);
+});
+
+test('the original level SVG overlaps the avatar and respects hidden fields', () => {
+  const data = { ...demo, level: 5 };
+  for (const theme of themes.keys()) {
+    const svg = renderCard(data, parseOptions({ theme }));
+    const avatar = svg.match(/<clipPath id="avatar"><rect x="(\d+)" y="(\d+)" width="(\d+)"/);
+    const badge = svg.match(/<image id="level-badge" x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"\s+role="img" aria-label="LV5" href="data:image\/svg\+xml;base64,([^"]+)"/);
+    const [x, y, size] = avatar.slice(1).map(Number);
+    const [left, top, width, height] = badge.slice(1, 5).map(Number);
+    assert.ok(left > x + size / 2 && left < x + size && left + width > x + size, theme);
+    assert.ok(top > y + size / 2 && top < y + size && top + height >= y + size, theme);
+    const original = Buffer.from(getLevelIcon(5).split(',')[1], 'base64').toString();
+    const embedded = Buffer.from(badge[5], 'base64').toString();
+    assert.equal(embedded.replace('width="1901" height="1024"', 'width="200" height="200"'), original);
+    assert.doesNotMatch(renderCard(data, parseOptions({ theme, hide: 'level' })), /id="level-badge"/);
+    assert.match(renderCard(data, parseOptions({ theme, hide: 'avatar' })), /id="level-badge"/);
+  }
+});
+
+test('visible statistics share a baseline and left-align each value with its label', () => {
+  const svg = renderCard({ ...demo, follower: 372, following: 278 },
+    parseOptions({ theme: 'default', hide: 'video,like' }));
+  const labels = [...svg.matchAll(/<text x="([^"]+)" y="([^"]+)" class="muted stat-label"[^>]*>([^<]+)/g)];
+  const values = [...svg.matchAll(/<text x="([^"]+)" y="([^"]+)" class="stat-value" font-size="([^"]+)"[^>]*>([^<]+)/g)];
+  assert.deepEqual(labels.map(match => match[3]), ['粉丝', '关注']);
+  assert.deepEqual(values.map(match => match[4]), ['372', '278']);
+  assert.deepEqual(values.map(match => match[1]), labels.map(match => match[1]));
+  assert.equal(values[0][2], values[1][2]);
+  assert.equal(values[0][3], values[1][3]);
+  assert.equal((svg.match(/class="divider"/g) || []).length, 1);
 });
 
 test('profile text preserves graphemes and escapes XML after truncation', () => {
